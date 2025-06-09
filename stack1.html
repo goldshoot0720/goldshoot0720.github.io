@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>stack</title>
+    <script>
+      class Stack {
+        constructor(stack = []) {
+          this.stack = stack;
+        }
+        toArrayString() {
+          let str = "[";
+          for (let i = 0; i < this.stack.length; i++) {
+            str += this.stack[i];
+            if (i < this.stack.length - 1) {
+              str += ",";
+            }
+          }
+          return str + "]";
+        }
+        toStackString() {
+          let str = "";
+          for (let i = 0; i < this.stack.length; i++) {
+            str = "\n" + this.stack[i] + str;
+          }
+          return "︻" + str + "\n︼";
+        }
+        push(value) {
+          this.stack.push(value);
+        }
+        pop() {
+          let value = this.stack[this.stack.length - 1];
+          this.stack.pop();
+          document.querySelector(".Pop").textContent = "Pop:\n" + value;
+          return value;
+        }
+        top() {
+          return this.stack[this.stack.length - 1];
+        }
+        size() {
+          return this.stack.length;
+        }
+      }
+
+      let stack = new Stack([
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37,
+      ]);
+
+      function updateUI() {
+        document.querySelector(".Top").textContent = "Top:\n" + stack.top();
+        document.querySelector(".Size").textContent = "Size:\n" + stack.size();
+        document.querySelector(".Array").textContent =
+          "Array:\n" + stack.toArrayString();
+        document.querySelector(".Stack").textContent =
+          "Stack:\n" + stack.toStackString();
+      }
+
+      function OnClickPush() {
+        const value = document.getElementById("Value").value;
+        if (value !== "") {
+          stack.push(value);
+          updateUI();
+          document.getElementById("Value").value = ""; // 清空輸入
+        }
+      }
+
+      function OnClickPop() {
+        const value = stack.pop();
+        updateUI();
+      }
+
+      window.onload = updateUI;
+    </script>
+  </head>
+  <body>
+    <nav>
+      <h1><a href="index.html">Home</a></h1>
+      <label for="Value">Value:</label>
+      <input type="text" id="Value" />
+      <button onclick="OnClickPush()">push</button>
+      <button onclick="OnClickPop()">pop</button>
+      <h2><pre class="Top"></pre></h2>
+      <h2><pre class="Pop"></pre></h2>
+      <h2><pre class="Size"></pre></h2>
+      <h2><pre class="Array"></pre></h2>
+      <h2><pre class="Stack"></pre></h2>
+    </nav>
+  </body>
+</html>
