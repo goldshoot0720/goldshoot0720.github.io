@@ -1,22 +1,30 @@
 const { createApp } = Vue;
 const { createRouter, createWebHashHistory } = VueRouter;
 
-const Home = {
-    template: `
-        <div class="p-8 text-center">
-          <h2 class="text-6xl font-bold mb-6">首頁</h2>
-          <p class="text-2xl">歡迎來到我的網站 👋</p>
-        </div>
-      `
-};
-
 const Countdown = {
     template: `
-        <div class="max-w-xl mx-auto mt-10 p-6 text-center card bg-base-200 shadow-xl">
-          <h2 class="text-6xl font-bold mb-6 text-primary">歷史倒數</h2>
-          <div class="text-7xl font-mono text-secondary">
-            {{ formattedCountdown }}
+        <div class="text-center p-4 max-w-3xl mx-auto">
+          <h1 class="text-5xl md:text-6xl font-extrabold mb-4 text-error">🔥 歷史倒數：大審判 🔥</h1>
+          
+          <!-- 現在時間 -->
+          <div class="text-lg md:text-2xl mb-6">
+            🕒 現在時間：<span class="font-mono">{{ currentTime }}</span>
           </div>
+
+          <!-- 倒數區域 -->
+          <div class="text-5xl md:text-6xl font-mono mb-8 flash judgment-animate">
+            ⏳ {{ formattedCountdown }}
+          </div>
+
+          <!-- SVG 審判圖示 -->
+          <div class="flex justify-center items-center mb-6">
+            <svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="crimson" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="animate-pulse">
+              <path d="M12 2v20M5 9l7 4 7-4" />
+              <path d="M5 20h14M9 20V10M15 20V10" />
+            </svg>
+          </div>
+
+          <p class="text-lg md:text-xl">預定審判時間：2025/07/05 04:18</p>
         </div>
       `,
     data() {
@@ -24,6 +32,7 @@ const Countdown = {
             countdownSeconds: 0,
             targetTime: new Date(2025, 6, 5, 4, 18).getTime(),
             timer: null,
+            now: new Date(),
         };
     },
     computed: {
@@ -34,6 +43,9 @@ const Countdown = {
             const minutes = Math.floor((sec % 3600) / 60);
             const seconds = sec % 60;
             return `${days} 天 ${hours} 時 ${minutes} 分 ${seconds} 秒`;
+        },
+        currentTime() {
+            return new Date().toLocaleString();
         },
     },
     mounted() {
@@ -46,19 +58,18 @@ const Countdown = {
     methods: {
         updateCountdown() {
             const now = Date.now();
-            const diff = Math.floor((this.targetTime - now) / 1000);
-            this.countdownSeconds = diff > 0 ? diff : 0;
+            this.countdownSeconds = Math.max(0, Math.floor((this.targetTime - now) / 1000));
+            this.now = new Date();
         },
     },
 };
 
+const Home = {
+    template: `<div class="p-6 text-center"><h2 class="text-5xl font-bold">首頁</h2></div>`
+};
+
 const About = {
-    template: `
-        <div class="p-8 text-center">
-          <h2 class="text-6xl font-bold mb-6">關於</h2>
-          <p class="text-2xl">這是一個用 Vue + Tailwind + daisyUI 製作的倒數頁面。</p>
-        </div>
-      `
+    template: `<div class="p-6 text-center"><h2 class="text-5xl font-bold">關於</h2></div>`
 };
 
 const routes = [
@@ -74,9 +85,7 @@ const router = createRouter({
 
 const app = createApp({
     data() {
-        return {
-            isMenuOpen: false,
-        };
+        return { isMenuOpen: false };
     },
     methods: {
         toggleMenu() {
@@ -85,22 +94,20 @@ const app = createApp({
     },
     template: `
         <div class="container mx-auto p-4">
-          <!-- 響應式導覽列 -->
-          <nav class="navbar bg-base-300 rounded-xl shadow mb-6">
+          <nav class="navbar bg-base-200 rounded-xl shadow mb-6">
             <div class="flex-1">
-              <a class="text-3xl font-bold">🔥 鋒兄倒數</a>
+              <a class="text-3xl font-bold">⚖️ 大審判倒數</a>
             </div>
             <div class="flex-none lg:hidden">
-              <button @click="toggleMenu" class="btn btn-square btn-ghost text-4xl">☰</button>
+              <button @click="toggleMenu" class="btn btn-square btn-ghost text-3xl">☰</button>
             </div>
             <div :class="{'hidden': !isMenuOpen}" class="flex flex-col lg:flex-row gap-4 mt-4 lg:mt-0 lg:gap-6 lg:block">
               <router-link to="/" class="btn btn-ghost text-2xl">首頁</router-link>
-              <router-link to="/countdown" class="btn btn-ghost text-2xl">歷史倒數</router-link>
+              <router-link to="/countdown" class="btn btn-ghost text-2xl">倒數</router-link>
               <router-link to="/about" class="btn btn-ghost text-2xl">關於</router-link>
             </div>
           </nav>
 
-          <!-- 內容區 -->
           <router-view></router-view>
         </div>
       `
