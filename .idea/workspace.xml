@@ -5,9 +5,8 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="7e8f6e86-3a0f-41d6-9085-dfec0a060d50" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/vue3/main.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/vue3/app.js" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/vue3/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/vue3/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/vue3/main.js" beforeDir="false" afterPath="$PROJECT_DIR$/vue3/main.js" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,7 +63,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1751036888962</updated>
-      <workItem from="1751036890113" duration="2736000" />
+      <workItem from="1751036890113" duration="2921000" />
     </task>
     <servers />
   </component>
