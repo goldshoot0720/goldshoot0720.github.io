@@ -1,15 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>vue3</title>
-  <script src="https://unpkg.com/vue@3/dist/vue.global.js" defer></script>
-  <script src="app.js" defer></script>
+  <title>Vue 3 + Vue Router CDN 分檔範例</title>
 </head>
 <body>
-<div id="app">
-  <button @click="count++">{{ count }}</button>
-</div>
+<div id="app"></div>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://unpkg.com/vue-router@4/dist/vue-router.global.js"></script>
+<script type="module" src="./main.js"></script>
 </body>
 </html>
