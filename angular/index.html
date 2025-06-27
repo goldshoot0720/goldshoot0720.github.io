@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8" />
+    <title>大審判倒數 (Angular 10 UMD CDN 版)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        body { font-family: system-ui, sans-serif; margin:0; padding:0; background:#f9fafb; }
+        .container { max-width: 768px; margin: 0 auto; padding: 1rem; }
+        .text-center { text-align: center; }
+        .text-5xl { font-size: 3rem; line-height: 1; }
+        .font-extrabold { font-weight: 800; }
+        .text-error { color: crimson; }
+        .font-mono { font-family: monospace; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        nav { background: #e5e7eb; border-radius: 0.75rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 1.5rem; padding: 1rem; display: flex; justify-content: space-between; }
+        nav a { font-size: 1.5rem; text-decoration:none; margin-right: 1rem; color:#1f2937; }
+        nav a:hover { color: crimson; }
+        .flash { animation: flashAnim 1.5s infinite; color: crimson; }
+        @keyframes flashAnim {
+            0%, 100% { color: crimson; }
+            50% { color: darkred; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" ng-app="countdownApp">
+    <nav>
+        <div>
+            <a href="#!/">首頁</a>
+            <a href="#!/countdown">倒數</a>
+            <a href="#!/about">關於</a>
+        </div>
+        <h1>⚖️ 大審判倒數</h1>
+    </nav>
+
+    <div ng-view></div>
+</div>
+
+<!-- AngularJS 1.7 CDN -->
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular.min.js"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.7.9/angular-route.min.js"></script>
+
+<!-- main.js -->
+<script src="main.js"></script>
+</body>
+</html>

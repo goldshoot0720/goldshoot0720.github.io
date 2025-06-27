@@ -1,0 +1,31 @@
+<div class="text-center p-8 max-w-xl mx-auto">
+  <h1 class="text-4xl font-bold mb-4 text-red-600">🔥 歷史倒數：大審判 🔥</h1>
+  <div class="text-xl mb-4">
+    🕒 現在時間：<span id="current-time"></span>
+  </div>
+  <div class="font-mono text-3xl mb-4">
+    ⏳ <span id="countdown"></span>
+  </div>
+  <p class="text-lg">預定審判時間：2025/07/05 04:18</p>
+  <div class="mt-6">
+    <a href="/" hx-get="home" hx-target="#app" class="text-blue-500 underline">回首頁</a>
+  </div>
+</div>
+<script>
+  const targetTime = new Date(2025, 6, 5, 4, 18).getTime();
+
+  function updateTime() {
+    const now = new Date();
+    const nowTs = now.getTime();
+    const countdownSeconds = Math.max(0, Math.floor((targetTime - nowTs) / 1000));
+    const days = Math.floor(countdownSeconds / (24 * 3600));
+    const hours = Math.floor((countdownSeconds % (24 * 3600)) / 3600);
+    const minutes = Math.floor((countdownSeconds % 3600) / 60);
+    const seconds = countdownSeconds % 60;
+
+    document.getElementById('current-time').textContent = now.toLocaleString();
+    document.getElementById('countdown').textContent = `${days} 天 ${hours} 時 ${minutes} 分 ${seconds} 秒`;
+  }
+
+  setInterval(updateTime, 1000);
+</script>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8" />
+    <title>大審判倒數 (Alpine.js 版)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        body { font-family: system-ui, sans-serif; margin: 0; background: #f9fafb; }
+        .container { max-width: 768px; margin: auto; padding: 1rem; }
+        nav { background: #e5e7eb; padding: 1rem; margin-bottom: 1.5rem; border-radius: 1rem; display: flex; justify-content: space-between; align-items: center; }
+        nav a { text-decoration: none; margin-right: 1rem; font-size: 1.25rem; color: #1f2937; }
+        nav a:hover { color: crimson; }
+        .text-center { text-align: center; }
+        .text-5xl { font-size: 3rem; }
+        .text-6xl { font-size: 3.75rem; }
+        .text-error { color: crimson; }
+        .font-extrabold { font-weight: 800; }
+        .font-mono { font-family: monospace; }
+        .mb-4 { margin-bottom: 1rem; }
+        .mb-6 { margin-bottom: 1.5rem; }
+        .mb-8 { margin-bottom: 2rem; }
+        .flash { animation: flash 1.5s infinite; }
+        @keyframes flash {
+            0%, 100% { color: crimson; }
+            50% { color: darkred; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container" x-data="pageRouter">
+    <nav>
+        <div>
+            <a href="#home">首頁</a>
+            <a href="#countdown">倒數</a>
+            <a href="#about">關於</a>
+        </div>
+        <strong>⚖️ 大審判倒數</strong>
+    </nav>
+
+    <!-- 路由內容 -->
+    <div x-show="route === 'home'" class="text-center">
+        <h2 class="text-5xl font-extrabold">🏠 首頁</h2>
+        <p class="mt-4">歡迎來到倒數計時頁面！</p>
+    </div>
+
+    <div x-show="route === 'about'" class="text-center">
+        <h2 class="text-5xl font-extrabold">ℹ️ 關於</h2>
+        <p class="mt-4">這是一個使用 Alpine.js 實作的大審判倒數應用。</p>
+    </div>
+
+    <div x-show="route === 'countdown'" x-data="countdownTimer" x-init="start()" class="text-center">
+        <h1 class="text-6xl font-extrabold mb-4 text-error">🔥 歷史倒數：大審判 🔥</h1>
+        <div class="mb-6">
+            🕒 現在時間：<span x-text="now" class="font-mono"></span>
+        </div>
+        <div class="text-5xl font-mono mb-8 flash">
+            ⏳ <span x-text="display"></span>
+        </div>
+        <svg width=

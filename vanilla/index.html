@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <title>大審判倒數（Vanilla JS 版）</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 0; background: #f9fafb; }
+    .container { max-width: 768px; margin: auto; padding: 1rem; }
+    nav { background: #e5e7eb; padding: 1rem; margin-bottom: 1.5rem; border-radius: 1rem; display: flex; justify-content: space-between; align-items: center; }
+    nav a { text-decoration: none; margin-right: 1rem; font-size: 1.25rem; color: #1f2937; }
+    nav a:hover { color: crimson; }
+    .text-center { text-align: center; }
+    .text-5xl { font-size: 3rem; }
+    .text-6xl { font-size: 3.75rem; }
+    .text-error { color: crimson; }
+    .font-extrabold { font-weight: 800; }
+    .font-mono { font-family: monospace; }
+    .mb-4 { margin-bottom: 1rem; }
+    .mb-6 { margin-bottom: 1.5rem; }
+    .mb-8 { margin-bottom: 2rem; }
+    .flash { animation: flash 1.5s infinite; }
+    @keyframes flash {
+      0%, 100% { color: crimson; }
+      50% { color: darkred; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <nav>
+    <div>
+      <a href="#home">首頁</a>
+      <a href="#countdown">倒數</a>
+      <a href="#about">關於</a>
+    </div>
+    <strong>⚖️ 大審判倒數</strong>
+  </nav>
+
+  <div id="view"></div>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>

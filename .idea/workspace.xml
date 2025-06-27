@@ -4,7 +4,20 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="7e8f6e86-3a0f-41d6-9085-dfec0a060d50" name="Changes" comment="" />
+    <list default="true" id="7e8f6e86-3a0f-41d6-9085-dfec0a060d50" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/angular/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/angular/main.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jQuery/index.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/jQuery/main.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/vanilla/main.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/open-goldshoot0720.github.io-vue3.bat" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/react19/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vanilla2015/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vue3/index.html" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/vue3/main.js" beforeDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -60,7 +73,8 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1751036888962</updated>
-      <workItem from="1751036890113" duration="4553000" />
+      <workItem from="1751036890113" duration="7055000" />
+      <workItem from="1751044066123" duration="4153000" />
     </task>
     <servers />
   </component>

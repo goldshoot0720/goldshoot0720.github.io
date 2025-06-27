@@ -1,5 +1,5 @@
-const { createApp } = Vue;
-const { createRouter, createWebHashHistory } = VueRouter;
+const {createApp} = Vue;
+const {createRouter, createWebHashHistory} = VueRouter;
 
 const Countdown = {
     template: `
@@ -73,9 +73,9 @@ const About = {
 };
 
 const routes = [
-    { path: '/', component: Home },
-    { path: '/countdown', component: Countdown },
-    { path: '/about', component: About },
+    {path: '/', component: Home},
+    {path: '/countdown', component: Countdown},
+    {path: '/about', component: About},
 ];
 
 const router = createRouter({
@@ -85,7 +85,7 @@ const router = createRouter({
 
 const app = createApp({
     data() {
-        return { isMenuOpen: false };
+        return {isMenuOpen: false};
     },
     methods: {
         toggleMenu() {
