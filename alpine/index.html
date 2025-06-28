@@ -1,53 +1,61 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>⚖️ 大審判倒數</title>
-    <script
-      src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js"
-      defer
-    ></script>
-    <script src="main.js" defer></script>
-    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
-    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
-  </head>
-  <body class="bg-gray-100 text-gray-900">
-    <div x-data="countdown()" x-init="init()" class="container mx-auto p-4">
-      <nav class="navbar bg-base-200 rounded-xl shadow mb-6">
-        <div class="flex-1">
-          <a class="text-3xl font-bold">⚖️ 大審判倒數</a>
-        </div>
-      </nav>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>倒數計時</title>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-100 text-center">
 
-      <div class="text-center p-4 max-w-3xl mx-auto">
-        <h1 class="text-5xl md:text-6xl font-extrabold mb-4 text-red-600">
-          🔥 歷史倒數：大審判 🔥
-        </h1>
-        <div class="text-lg md:text-2xl mb-6">
-          🕒 現在時間：<span class="font-mono" x-text="currentTime"></span>
-        </div>
-        <div class="text-5xl md:text-6xl font-mono mb-8">
-          ⏳ <span x-text="formattedCountdown"></span>
-        </div>
-        <div class="flex justify-center items-center mb-6">
-          <svg
-            width="120"
-            height="120"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="crimson"
-            stroke-width="1.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="animate-pulse"
-          >
-            <path d="M12 2v20M5 9l7 4 7-4" />
-            <path d="M5 20h14M9 20V10M15 20V10" />
-          </svg>
-        </div>
-        <p class="text-lg md:text-xl">預定審判時間：2025/07/05 04:18</p>
-      </div>
+  <div class="container mx-auto p-4" x-data="countdown()" x-init="init()">
+    <h1 class="text-5xl font-bold mb-4 text-red-600">🔥 歷史倒數：大審判 🔥</h1>
+
+    <div class="text-lg mb-6">
+      🕒 現在時間：<span class="font-mono" x-text="currentTime"></span>
     </div>
-  </body>
+
+    <div class="text-5xl font-mono mb-8">
+      ⏳ <span x-text="formattedCountdown"></span>
+    </div>
+
+    <p class="text-lg">預定審判時間：2025/07/05 04:18</p>
+  </div>
+
+  <script>
+    function countdown() {
+      return {
+        targetTime: new Date(2025, 6, 5, 4, 18).getTime(),
+        countdownSeconds: 0,
+        currentTime: new Date().toLocaleString(),
+        timer: null,
+
+        init() {
+          this.updateCountdown();
+          this.timer = setInterval(() => {
+            this.updateCountdown();
+            this.currentTime = new Date().toLocaleString();
+          }, 1000);
+        },
+
+        updateCountdown() {
+          const now = Date.now();
+          this.countdownSeconds = Math.max(
+            0,
+            Math.floor((this.targetTime - now) / 1000)
+          );
+        },
+
+        get formattedCountdown() {
+          const sec = this.countdownSeconds;
+          const days = Math.floor(sec / (24 * 3600));
+          const hours = Math.floor((sec % (24 * 3600)) / 3600);
+          const minutes = Math.floor((sec % 3600) / 60);
+          const seconds = sec % 60;
+          return `${days} 天 ${hours} 時 ${minutes} 分 ${seconds} 秒`;
+        }
+      };
+    }
+  </script>
+</body>
 </html>
