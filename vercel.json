@@ -1,4 +1,10 @@
 {
+  "rewrites": [
+    {
+      "source": "/vuevercel(/.*)?",
+      "destination": "/vuevercel.html"
+    }
+  ],
   "headers": [
     {
       "source": "/vuevercelmain.js",
