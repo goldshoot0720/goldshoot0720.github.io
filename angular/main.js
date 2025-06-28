@@ -1,11 +1,13 @@
-angular.module('countdownApp', ['ngRoute'])
-    .config(['$routeProvider', function($routeProvider) {
-        $routeProvider
-            .when('/', {
-                template: '<div class="text-center"><h2 class="text-5xl font-extrabold">首頁</h2></div>'
-            })
-            .when('/countdown', {
-                template: `
+angular.module("countdownApp", ["ngRoute"]).config([
+  "$routeProvider",
+  function ($routeProvider) {
+    $routeProvider
+      .when("/", {
+        template:
+          '<div class="text-center"><h2 class="text-5xl font-extrabold">首頁</h2></div>',
+      })
+      .when("/countdown", {
+        template: `
       <div class="text-center">
         <h1 class="text-5xl font-extrabold mb-4 text-error">🔥 歷史倒數：大審判 🔥</h1>
         <div class="mb-6">
@@ -21,35 +23,41 @@ angular.module('countdownApp', ['ngRoute'])
         <p>預定審判時間：2025/07/05 04:18</p>
       </div>
       `,
-                controller: ['$scope', '$interval', function($scope, $interval) {
-                    const targetTime = new Date(2025, 6, 5, 4, 18).getTime();
+        controller: [
+          "$scope",
+          "$interval",
+          function ($scope, $interval) {
+            const targetTime = new Date(2025, 6, 5, 4, 18).getTime();
 
-                    function updateCountdown() {
-                        const now = Date.now();
-                        const diff = Math.max(0, Math.floor((targetTime - now) / 1000));
-                        let sec = diff;
+            function updateCountdown() {
+              const now = Date.now();
+              const diff = Math.max(0, Math.floor((targetTime - now) / 1000));
+              let sec = diff;
 
-                        $scope.days = Math.floor(sec / (24 * 3600));
-                        sec %= (24 * 3600);
-                        $scope.hours = Math.floor(sec / 3600);
-                        sec %= 3600;
-                        $scope.minutes = Math.floor(sec / 60);
-                        $scope.seconds = sec % 60;
-                        $scope.currentTime = new Date().toLocaleString();
-                    }
+              $scope.days = Math.floor(sec / (24 * 3600));
+              sec %= 24 * 3600;
+              $scope.hours = Math.floor(sec / 3600);
+              sec %= 3600;
+              $scope.minutes = Math.floor(sec / 60);
+              $scope.seconds = sec % 60;
+              $scope.currentTime = new Date().toLocaleString();
+            }
 
-                    updateCountdown();
-                    const stop = $interval(updateCountdown, 1000);
+            updateCountdown();
+            const stop = $interval(updateCountdown, 1000);
 
-                    $scope.$on('$destroy', function() {
-                        $interval.cancel(stop);
-                    });
-                }]
-            })
-            .when('/about', {
-                template: '<div class="text-center"><h2 class="text-5xl font-extrabold">關於</h2></div>'
-            })
-            .otherwise({
-                redirectTo: '/'
+            $scope.$on("$destroy", function () {
+              $interval.cancel(stop);
             });
-    }]);
+          },
+        ],
+      })
+      .when("/about", {
+        template:
+          '<div class="text-center"><h2 class="text-5xl font-extrabold">關於</h2></div>',
+      })
+      .otherwise({
+        redirectTo: "/",
+      });
+  },
+]);

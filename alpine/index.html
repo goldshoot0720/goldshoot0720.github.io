@@ -1,61 +1,53 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
-<head>
+<html lang="zh-TW">
+  <head>
     <meta charset="UTF-8" />
-    <title>大審判倒數 (Alpine.js 版)</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        body { font-family: system-ui, sans-serif; margin: 0; background: #f9fafb; }
-        .container { max-width: 768px; margin: auto; padding: 1rem; }
-        nav { background: #e5e7eb; padding: 1rem; margin-bottom: 1.5rem; border-radius: 1rem; display: flex; justify-content: space-between; align-items: center; }
-        nav a { text-decoration: none; margin-right: 1rem; font-size: 1.25rem; color: #1f2937; }
-        nav a:hover { color: crimson; }
-        .text-center { text-align: center; }
-        .text-5xl { font-size: 3rem; }
-        .text-6xl { font-size: 3.75rem; }
-        .text-error { color: crimson; }
-        .font-extrabold { font-weight: 800; }
-        .font-mono { font-family: monospace; }
-        .mb-4 { margin-bottom: 1rem; }
-        .mb-6 { margin-bottom: 1.5rem; }
-        .mb-8 { margin-bottom: 2rem; }
-        .flash { animation: flash 1.5s infinite; }
-        @keyframes flash {
-            0%, 100% { color: crimson; }
-            50% { color: darkred; }
-        }
-    </style>
-</head>
-<body>
-
-<div class="container" x-data="pageRouter">
-    <nav>
-        <div>
-            <a href="#home">首頁</a>
-            <a href="#countdown">倒數</a>
-            <a href="#about">關於</a>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>⚖️ 大審判倒數</title>
+    <script
+      src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js"
+      defer
+    ></script>
+    <script src="main.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/moment.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"></script>
+  </head>
+  <body class="bg-gray-100 text-gray-900">
+    <div x-data="countdown()" x-init="init()" class="container mx-auto p-4">
+      <nav class="navbar bg-base-200 rounded-xl shadow mb-6">
+        <div class="flex-1">
+          <a class="text-3xl font-bold">⚖️ 大審判倒數</a>
         </div>
-        <strong>⚖️ 大審判倒數</strong>
-    </nav>
+      </nav>
 
-    <!-- 路由內容 -->
-    <div x-show="route === 'home'" class="text-center">
-        <h2 class="text-5xl font-extrabold">🏠 首頁</h2>
-        <p class="mt-4">歡迎來到倒數計時頁面！</p>
+      <div class="text-center p-4 max-w-3xl mx-auto">
+        <h1 class="text-5xl md:text-6xl font-extrabold mb-4 text-red-600">
+          🔥 歷史倒數：大審判 🔥
+        </h1>
+        <div class="text-lg md:text-2xl mb-6">
+          🕒 現在時間：<span class="font-mono" x-text="currentTime"></span>
+        </div>
+        <div class="text-5xl md:text-6xl font-mono mb-8">
+          ⏳ <span x-text="formattedCountdown"></span>
+        </div>
+        <div class="flex justify-center items-center mb-6">
+          <svg
+            width="120"
+            height="120"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="crimson"
+            stroke-width="1.5"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            class="animate-pulse"
+          >
+            <path d="M12 2v20M5 9l7 4 7-4" />
+            <path d="M5 20h14M9 20V10M15 20V10" />
+          </svg>
+        </div>
+        <p class="text-lg md:text-xl">預定審判時間：2025/07/05 04:18</p>
+      </div>
     </div>
-
-    <div x-show="route === 'about'" class="text-center">
-        <h2 class="text-5xl font-extrabold">ℹ️ 關於</h2>
-        <p class="mt-4">這是一個使用 Alpine.js 實作的大審判倒數應用。</p>
-    </div>
-
-    <div x-show="route === 'countdown'" x-data="countdownTimer" x-init="start()" class="text-center">
-        <h1 class="text-6xl font-extrabold mb-4 text-error">🔥 歷史倒數：大審判 🔥</h1>
-        <div class="mb-6">
-            🕒 現在時間：<span x-text="now" class="font-mono"></span>
-        </div>
-        <div class="text-5xl font-mono mb-8 flash">
-            ⏳ <span x-text="display"></span>
-        </div>
-        <svg width=
+  </body>
+</html>
