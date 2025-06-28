@@ -1,7 +1,7 @@
 {
   "headers": [
     {
-      "source": "/main.js",
+      "source": "/vuevercelmain.js",
       "headers": [
         {
           "key": "Content-Type",
