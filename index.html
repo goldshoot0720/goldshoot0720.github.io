@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>goldshoot0720.github.io</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  </head>
+    <style>
+    .item {
+      border: 1px solid #ccc;
+      padding: 12px;
+      margin-bottom: 12px;
+      max-width: 400px;
+    }
+    .item img {
+      max-width: 100%;
+      height: auto;
+      display: block;
+      margin-top: 8px;
+    }
+  </style>
+  <body>
+  <nav>
+      <h1>商品清單</h1>
+  <div id="mydiv"></div>
+  <script>
+    axios.get('https://fastapitsaopaofenghsiung2025.up.railway.app/inventory/')
+      .then(response => {
+        const container = document.getElementById('mydiv');
+        const items = response.data.documents;
+
+        container.innerHTML = items.map(item => {
+          return `
+            <div class="item">
+              <h2>${item.name}</h2>
+              <p>價格：${item.price} 元</p>
+              <p>數量：${item.amount}</p>
+              <p>賣場：${item.shop}</p>
+              ${item.img ? `<img src="${item.img}" alt="${item.name}" />` : ''}
+            </div>
+          `;
+        }).join('');
+      })
+      .catch(err => {
+        console.error('取得商品資料失敗:', err);
+        document.getElementById('mydiv').innerText = '商品資料讀取失敗，請稍後再試。';
+      });
+  </script>
+  <div id="mydiv"></div>
+    <ul>
+      <li>
+        <a href="./vue">vue</a>
+      </li>
+      <li>
+        <a href="./react">react</a>
+      </li>
+      <li>
+        <a href="./vanilla">vanilla</a>
+      </li>
+      <li>
+        <a href="./jquery">jquery</a>
+      </li>
+      <li>
+        <a href="./alpine">alpine</a>
+      </li>
+      <li>
+        <a href="./angular">angular</a>
+      </li>
+      <li>
+        <a href="./htmx">htmx</a>
+      </li>
+      <li>
+        <a href="./lit">lit</a>
+      </li>
+      <li>
+        <a href="./preact">preact</a>
+      </li>
+      <li>
+        <a href="./knockout">knockout</a>
+      </li>
+      <li>
+        <a href="./vuevercel">vuevercel</a>
+      </li>
+    </ul>
+  </nav>
+<img src="./202507050418tpe.png" width="666px"></img>
+  </body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "rewrites": [
+    {
+      "source": "/vuevercel(/.*)?",
+      "destination": "/vuevercel.html"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/vuevercelmain.js",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/javascript"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>倒數計時</title>
+  <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-gray-100 text-center">
+
+  <div class="container mx-auto p-4" x-data="countdown()" x-init="init()">
+    <h1 class="text-5xl font-bold mb-4 text-red-600">🔥 歷史倒數：大審判 🔥</h1>
+
+    <div class="text-lg mb-6">
+      🕒 現在時間：<span class="font-mono" x-text="currentTime"></span>
+    </div>
+
+    <div class="text-5xl font-mono mb-8">
+      ⏳ <span x-text="formattedCountdown"></span>
+    </div>
+
+    <p class="text-lg">預定審判時間：2025/07/05 04:18</p>
+  </div>
+
+  <script>
+    function countdown() {
+      return {
+        targetTime: new Date(2025, 6, 5, 4, 18).getTime(),
+        countdownSeconds: 0,
+        currentTime: new Date().toLocaleString(),
+        timer: null,
+
+        init() {
+          this.updateCountdown();
+          this.timer = setInterval(() => {
+            this.updateCountdown();
+            this.currentTime = new Date().toLocaleString();
+          }, 1000);
+        },
+
+        updateCountdown() {
+          const now = Date.now();
+          this.countdownSeconds = Math.max(
+            0,
+            Math.floor((this.targetTime - now) / 1000)
+          );
+        },
+
+        get formattedCountdown() {
+          const sec = this.countdownSeconds;
+          const days = Math.floor(sec / (24 * 3600));
+          const hours = Math.floor((sec % (24 * 3600)) / 3600);
+          const minutes = Math.floor((sec % 3600) / 60);
+          const seconds = sec % 60;
+          return `${days} 天 ${hours} 時 ${minutes} 分 ${seconds} 秒`;
+        }
+      };
+    }
+  </script>
+</body>
+</html>
