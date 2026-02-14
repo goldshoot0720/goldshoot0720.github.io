@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>桃園市一周天氣預報</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft JhengHei', 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            color: white;
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .api-input {
+            background: rgba(255,255,255,0.95);
+            padding: 20px;
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .api-input label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .api-input input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .api-input button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .api-input button:hover {
+            transform: translateY(-2px);
+        }
+
+        .api-input .note {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        .api-input .note a {
+            color: #667eea;
+        }
+
+        .weather-container {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1200px) {
+            .weather-container {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .weather-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .weather-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .weather-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s;
+        }
+
+        .weather-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .date-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .date-header .date {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .date-header .weekday {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .weather-image {
+            width: 100%;
+            height: 180px;
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .weather-image::after {
+            content: attr(data-weather);
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.6);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* 晴天 - 使用圖片左側 */
+        .weather-sunny {
+            background-image: url('Gemini_Generated_Image_x0932sx0932sx093.png');
+            background-size: 300% 100%;
+            background-position: left center;
+        }
+
+        /* 陰天 - 使用中間 */
+        .weather-cloudy {
+            background-image: url('Gemini_Generated_Image_x0932sx0932sx093.png');
+            background-size: 300% 100%;
+            background-position: center;
+        }
+
+        /* 雨天 - 使用右側 */
+        .weather-rainy {
+            background-image: url('Gemini_Generated_Image_x0932sx0932sx093.png');
+            background-size: 300% 100%;
+            background-position: right center;
+        }
+
+        .weather-info {
+            padding: 20px;
+            text-align: center;
+        }
+
+        .temp-range {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .temp-range .low {
+            color: #3498db;
+        }
+
+        .temp-range .high {
+            color: #e74c3c;
+        }
+
+        .weather-desc {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .rain-prob {
+            font-size: 0.95rem;
+            color: #3498db;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            padding: 40px;
+        }
+
+        .error {
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .cors-warning {
+            background: rgba(243, 156, 18, 0.95);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .cors-warning h3 {
+            margin-bottom: 10px;
+        }
+
+        .cors-warning ol {
+            margin-left: 20px;
+            line-height: 1.8;
+        }
+
+        .cors-warning code {
+            background: rgba(0,0,0,0.2);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .sample-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            color: rgba(255,255,255,0.8);
+            margin-top: 30px;
+            font-size: 0.9rem;
+        }
+
+        .time-label {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-size: 1.1rem;
+        }
+
+        /* 折疊面板樣式 */
+        .collapsible-panel {
+            background: rgba(255,255,255,0.95);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .collapsible-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+            user-select: none;
+        }
+
+        .collapsible-header:hover {
+            background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+        }
+
+        .collapsible-header h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .collapsible-icon {
+            font-size: 1.2rem;
+            transition: transform 0.3s;
+        }
+
+        .collapsible-panel.collapsed .collapsible-icon {
+            transform: rotate(-90deg);
+        }
+
+        .collapsible-content {
+            padding: 20px;
+            max-height: 500px;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out, padding 0.3s;
+        }
+
+        .collapsible-panel.collapsed .collapsible-content {
+            max-height: 0;
+            padding: 0 20px;
+        }
+
+        .api-input-collapsed {
+            padding: 0;
+            background: none;
+            box-shadow: none;
+            margin-bottom: 0;
+        }
+
+        .api-input-collapsed label,
+        .api-input-collapsed input,
+        .api-input-collapsed button,
+        .api-input-collapsed .note {
+            display: block;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🐱 喵桃市一周天氣預報 🐾</h1>
+
+        <!-- 可折疊的 API 輸入區塊 -->
+        <div class="collapsible-panel collapsed" id="apiPanel">
+            <div class="collapsible-header" onclick="toggleApiPanel()">
+                <h3>🔑 CWA Open Data API 授權碼設定</h3>
+                <span class="collapsible-icon">▼</span>
+            </div>
+            <div class="collapsible-content">
+                <div class="api-input api-input-collapsed">
+                    <label for="apiKey">API 授權碼：</label>
+                    <input type="text" id="apiKey" placeholder="請輸入您的 API 授權碼 (例如: CWA-XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX)">
+                    <div style="margin-top: 15px;">
+                        <button onclick="fetchWeather()">🌐 抓取天氣資料</button>
+                    </div>
+                    <p class="note">
+                        💡 還沒有授權碼？請至 <a href="https://opendata.cwa.gov.tw/index" target="_blank">中央氣象署開放資料平臺</a> 申請免費帳號<br>
+                        本程式使用「鄉鎮天氣預報-桃園市未來1週天氣預報」API (F-D0047-005)
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div id="message"></div>
+        <div id="weatherDisplay"></div>
+
+        <div style="text-align: center; margin: 20px 0;">
+            <a href="https://www.cwa.gov.tw/V8/C/W/County/County.html?CID=68" target="_blank" style="background: rgba(255,255,255,0.9); color: #333; padding: 12px 25px; border-radius: 25px; text-decoration: none; display: inline-block; font-weight: bold;">
+                🔗 點此對照中央氣象局官網 - 桃園市一周預報
+            </a>
+        </div>
+
+        <div class="footer">
+            <p>資料來源：中央氣象署 (CWA) | 圖片使用：Gemini_Generated_Image_x0932sx0932sx093.png</p>
+        </div>
+    </div>
+
+    <script>
+        // 折疊面板控制
+        function toggleApiPanel() {
+            const panel = document.getElementById('apiPanel');
+            panel.classList.toggle('collapsed');
+        }
+
+        // 展開面板（當需要輸入時）
+        function expandApiPanel() {
+            const panel = document.getElementById('apiPanel');
+            panel.classList.remove('collapsed');
+        }
+
+        // 星期幾名稱
+        const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+
+        // 天氣類型對應
+        function getWeatherClass(wx) {
+            const wx_lower = wx.toLowerCase();
+            if (wx_lower.includes('晴')) {
+                return 'weather-sunny';
+            } else if (wx_lower.includes('雨') || wx_lower.includes('雷')) {
+                return 'weather-rainy';
+            } else {
+                return 'weather-cloudy';
+            }
+        }
+
+        // 取得星期幾
+        function getWeekday(dateStr) {
+            const date = new Date(dateStr);
+            return weekdays[date.getDay()];
+        }
+
+        // 格式化日期 (MM/DD)
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${month}/${day}`;
+        }
+
+        // 顯示載入中
+        function showLoading() {
+            document.getElementById('message').innerHTML = '<div class="loading">⏳ 正在抓取天氣資料...</div>';
+        }
+
+        // 顯示錯誤
+        function showError(msg) {
+            document.getElementById('message').innerHTML = `<div class="error">❌ ${msg}</div>`;
+        }
+
+        // 清除訊息
+        function clearMessage() {
+            document.getElementById('message').innerHTML = '';
+        }
+
+        // 檢查是否從 file:// 協議開啟
+        function isFileProtocol() {
+            return window.location.protocol === 'file:';
+        }
+
+        // 顯示 CORS 警告
+        function showCorsWarning() {
+            document.getElementById('message').innerHTML = `
+                <div class="cors-warning">
+                    <h3>⚠️ 需要啟動本地伺服器</h3>
+                    <p>由於瀏覽器安全限制，無法直接開啟 HTML 檔案呼叫 API。</p>
+                    <p><strong>請選擇以下任一方法解決：</strong></p>
+                    <ol>
+                        <li><strong>使用批次檔（最簡單）：</strong>雙擊執行 <code>start_server.bat</code>，然後開啟 http://localhost:8000/taoyuan_weather.html</li>
+                        <li><strong>使用 PowerShell：</strong>執行 <code>start_server.ps1</code>，然後開啟 http://localhost:8000/taoyuan_weather.html</li>
+                        <li><strong>手動啟動：</strong>在終端機輸入：<br><code>python -m http.server 8000</code><br>然後開啟 http://localhost:8000/taoyuan_weather.html</li>
+                        <li><strong>使用 VS Code：</strong>安裝「Live Server」擴充功能，在 HTML 檔案上按右鍵選「Open with Live Server」</li>
+                    </ol>
+                </div>
+            `;
+        }
+
+        // 抓取天氣資料
+        async function fetchWeather() {
+            // 檢查是否從 file:// 開啟
+            if (isFileProtocol()) {
+                showCorsWarning();
+                return;
+            }
+
+            const apiKey = document.getElementById('apiKey').value.trim();
+            
+            if (!apiKey) {
+                expandApiPanel();
+                showError('請輸入 API 授權碼');
+                return;
+            }
+
+            showLoading();
+
+            try {
+                // CWA Open Data API - 鄉鎮天氣預報-桃園市未來1週天氣預報 (F-D0047-005)
+                const url = `https://opendata.cwa.gov.tw/api/v1/rest/datastore/F-D0047-005?Authorization=${apiKey}&locationName=%E6%A1%83%E5%9C%92%E5%B8%82`;
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error('API 請求失敗，請檢查授權碼是否正確');
+                }
+
+                const data = await response.json();
+                
+                // 調試：顯示原始資料結構
+                console.log('API Response:', data);
+                
+                if (data.success !== 'true' && data.success !== true) {
+                    throw new Error(data.result?.message || data.message || '資料取得失敗');
+                }
+
+                processWeatherData(data);
+                clearMessage();
+
+            } catch (error) {
+                console.error('Error:', error);
+                // 檢查是否為 CORS 錯誤或 404
+                if (error.name === 'TypeError' && error.message.includes('NetworkError')) {
+                    showCorsWarning();
+                } else if (error.message && error.message.includes('404')) {
+                    showError('API 端點不存在 (404)，可能是 API 代碼錯誤或已停用');
+                } else {
+                    showError(error.message || '無法連線至 API，請確認網路連線');
+                }
+            }
+        }
+
+        // 處理天氣資料 (F-D0047-005 鄉鎮天氣預報-桃園市未來1週天氣預報)
+        function processWeatherData(data) {
+            console.log('Processing data:', data);
+            
+            // 檢查資料結構 (F-D0047-005 使用大寫欄位名)
+            if (!data.records || !data.records.Locations) {
+                throw new Error('API 回傳資料格式錯誤：缺少 records.Locations');
+            }
+
+            const Locations = data.records.Locations;
+            if (!Array.isArray(Locations) || Locations.length === 0) {
+                throw new Error('無法找到地點資料');
+            }
+
+            const location = Locations[0].Location[0];
+            console.log('Location:', location);
+
+            // 取得天氣元素 (大寫)
+            const WeatherElements = location.WeatherElement;
+            if (!WeatherElements || !Array.isArray(WeatherElements)) {
+                throw new Error('天氣資料格式錯誤：缺少 WeatherElement');
+            }
+
+            console.log('WeatherElements:', WeatherElements);
+            console.log('Available elements:', WeatherElements.map(e => e.ElementName));
+
+            // 找出各元素 (F-D0047-005 使用中文欄位名)
+            const tempElement = WeatherElements.find(e => e.ElementName === '溫度');
+            const wxElement = WeatherElements.find(e => e.ElementName === '天氣現象');
+            const popElement = WeatherElements.find(e => e.ElementName.includes('降雨機率'));
+
+            console.log('tempElement:', tempElement);
+            console.log('wxElement:', wxElement);
+            console.log('popElement:', popElement);
+
+            if (!tempElement || !wxElement) {
+                throw new Error('天氣資料不完整：缺少必要的天氣元素');
+            }
+
+            // 整理每日資料
+            // 這個 API 是逐小時資料，我們需要按日期分組並計算每日最高/最低溫度
+            const dailyMap = new Map();
+            
+            // 處理溫度資料 (每 3 小時一筆)
+            tempElement.Time.forEach(timeData => {
+                const dateTime = timeData.DataTime || timeData.StartTime;
+                if (!dateTime) return;
+                
+                const date = dateTime.split('T')[0];
+                const temp = parseInt(timeData.ElementValue[0].Temperature);
+                
+                if (!dailyMap.has(date)) {
+                    dailyMap.set(date, { minTemp: temp, maxTemp: temp, wx: '', pop: '' });
+                } else {
+                    const day = dailyMap.get(date);
+                    day.minTemp = Math.min(day.minTemp, temp);
+                    day.maxTemp = Math.max(day.maxTemp, temp);
+                }
+            });
+
+            // 處理天氣現象 (取白天 06:00-18:00 的代表天氣)
+            wxElement.Time.forEach(timeData => {
+                const dateTime = timeData.DataTime || timeData.StartTime;
+                if (!dateTime) return;
+                
+                const date = dateTime.split('T')[0];
+                const hour = parseInt(dateTime.split('T')[1]?.split(':')[0] || '0');
+                
+                // 取中午 12 點的天氣作為當天代表
+                if (hour === 12 && dailyMap.has(date)) {
+                    const day = dailyMap.get(date);
+                    day.wx = timeData.ElementValue[0].Weather;
+                }
+            });
+
+            // 處理降雨機率
+            if (popElement) {
+                popElement.Time.forEach(timeData => {
+                    const dateTime = timeData.DataTime || timeData.StartTime;
+                    if (!dateTime) return;
+                    
+                    const date = dateTime.split('T')[0];
+                    if (dailyMap.has(date)) {
+                        const day = dailyMap.get(date);
+                        day.pop = timeData.ElementValue[0].ProbabilityOfPrecipitation || '-';
+                    }
+                });
+            }
+
+            // 轉換為陣列並排序
+            const sortedDates = Array.from(dailyMap.keys()).sort().slice(0, 7);
+            const dailyData = sortedDates.map(date => {
+                const day = dailyMap.get(date);
+                // 如果沒有抓到中午的天氣，使用第一個可用的天氣
+                if (!day.wx && wxElement.Time.length > 0) {
+                    day.wx = wxElement.Time[0].ElementValue[0].Weather;
+                }
+                
+                return {
+                    date: date,
+                    dateFormatted: formatDate(date),
+                    weekday: getWeekday(date),
+                    minTemp: day.minTemp,
+                    maxTemp: day.maxTemp,
+                    weather: day.wx || '未知',
+                    rainProb: day.pop || '-'
+                };
+            });
+
+            if (dailyData.length === 0) {
+                throw new Error('無法解析天氣預報資料');
+            }
+
+            displayWeather(dailyData);
+        }
+
+        // 顯示天氣資料
+        function displayWeather(dailyData) {
+            const display = document.getElementById('weatherDisplay');
+            
+            let html = `<div style="text-align: center; margin-bottom: 20px;"><span class="time-label">🌅 白天預報（每日最高/最低溫度）</span></div>`;
+            
+            // 卡片視圖
+            html += '<div class="weather-container">';
+            dailyData.forEach(day => {
+                const weatherClass = getWeatherClass(day.weather);
+                
+                html += `
+                    <div class="weather-card">
+                        <div class="date-header">
+                            <div class="date">${day.dateFormatted}</div>
+                            <div class="weekday">${day.weekday}</div>
+                        </div>
+                        <div class="weather-image ${weatherClass}" data-weather="${day.weather}"></div>
+                        <div class="weather-info">
+                            <div class="temp-range">
+                                <span class="low">${day.minTemp}°</span> ~ <span class="high">${day.maxTemp}°</span>
+                            </div>
+                            <div class="weather-desc">${day.weather}</div>
+                            <div class="rain-prob">🌧️ 降雨機率: ${day.rainProb}%</div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            display.innerHTML = html;
+        }
+
+        // 載入範例資料 (用於測試，對照官網格式)
+        function loadSampleData() {
+            clearMessage();
+            
+            // 範例資料：對照 https://www.cwa.gov.tw/V8/C/W/County/Week/68.html
+            // 日期：02/15(日) ~ 02/21(六)
+            const sampleData = [
+                { date: '2026-02-15', dateFormatted: '02/15', weekday: '星期日', minTemp: '14', maxTemp: '22', weather: '晴天', rainProb: '0' },
+                { date: '2026-02-16', dateFormatted: '02/16', weekday: '星期一', minTemp: '13', maxTemp: '21', weather: '多雲', rainProb: '10' },
+                { date: '2026-02-17', dateFormatted: '02/17', weekday: '星期二', minTemp: '15', maxTemp: '20', weather: '陰天', rainProb: '20' },
+                { date: '2026-02-18', dateFormatted: '02/18', weekday: '星期三', minTemp: '14', maxTemp: '19', weather: '雨天', rainProb: '80' },
+                { date: '2026-02-19', dateFormatted: '02/19', weekday: '星期四', minTemp: '13', maxTemp: '18', weather: '短暫雨', rainProb: '60' },
+                { date: '2026-02-20', dateFormatted: '02/20', weekday: '星期五', minTemp: '12', maxTemp: '20', weather: '多雲', rainProb: '30' },
+                { date: '2026-02-21', dateFormatted: '02/21', weekday: '星期六', minTemp: '13', maxTemp: '23', weather: '晴天', rainProb: '10' }
+            ];
+
+            displayWeather(sampleData);
+        }
+
+        // 頁面載入時自動顯示範例
+        window.onload = function() {
+            loadSampleData();
+        };
+    </script>
+</body>
+</html>
