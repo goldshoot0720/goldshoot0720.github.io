@@ -1860,21 +1860,24 @@
             });
 
             /* ── CSV Export ── */
-            const CSV_COLS = ['name', 'site', 'price', 'currency', 'nextdate', 'account', 'note', 'continue'];
-            const CSV_HEADER = '名稱,網站,金額,貨幣,下次扣款日,帳號,備註,持續訂閱';
+            // Header matches Appwrite subscription schema field names exactly
+            const CSV_HEADER = '$id,name,site,price,nextdate,note,account,currency,continue,$createdAt,$updatedAt';
 
             page.querySelector('#subExportBtn').addEventListener('click', () => {
                 if (!docs.length) { alert('目前沒有資料可匯出'); return; }
                 const escape = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
                 const rows = docs.map(d => [
-                    escape(d.name),
+                    escape(d.$id ?? ''),
+                    escape(d.name ?? ''),
                     escape(d.site ?? ''),
                     d.price ?? 0,
-                    escape(d.currency ?? 'TWD'),
                     d.nextdate ? d.nextdate.slice(0, 10) : '',
-                    escape(d.account ?? ''),
                     escape(d.note ?? ''),
+                    escape(d.account ?? ''),
+                    escape(d.currency ?? 'TWD'),
                     d.continue !== false ? 'true' : 'false',
+                    d.$createdAt ? d.$createdAt.slice(0, 19).replace('T', ' ') : '',
+                    d.$updatedAt ? d.$updatedAt.slice(0, 19).replace('T', ' ') : '',
                 ].join(','));
                 const bom = '\uFEFF'; // UTF-8 BOM for Excel
                 const csv = bom + CSV_HEADER + '\n' + rows.join('\n');
@@ -1886,6 +1889,8 @@
             });
 
             /* ── CSV Import ── */
+            // Accepts headers matching Appwrite field names (case-insensitive).
+            // $id, $createdAt, $updatedAt are ignored (read-only in Appwrite).
             const fileInput = page.querySelector('#subImportFile');
             page.querySelector('#subImportBtn').addEventListener('click', () => fileInput.click());
 
@@ -1897,7 +1902,6 @@
                 const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim());
                 if (lines.length < 2) { alert('沒有資料列（至少需要標題列和一筆資料）'); return; }
 
-                // Parse header to map column index
                 const parseRow = raw => {
                     const result = [];
                     let cur = '', inQ = false;
@@ -1911,8 +1915,8 @@
                 };
 
                 const hdrs = parseRow(lines[0].replace(/^\uFEFF/, '')).map(h => h.trim().toLowerCase());
-                const idx = k => hdrs.findIndex(h => h === k || h === { name: '名稱', site: '網站', price: '金額', currency: '貨幣', nextdate: '下次扣款日', account: '帳號', note: '備註', continue: '持續訂閱' }[k]);
-                const get = (cells, k) => { const i = idx(k); return i >= 0 ? cells[i]?.trim() : ''; };
+                const col = k => hdrs.indexOf(k.toLowerCase());
+                const get = (cells, k) => { const i = col(k); return i >= 0 ? cells[i]?.trim() : ''; };
 
                 const dataRows = lines.slice(1);
                 let ok = 0, fail = 0;
@@ -1924,6 +1928,7 @@
                     const cells = parseRow(dataRows[i]);
                     const name = get(cells, 'name');
                     if (!name) { fail++; continue; }
+                    // $id, $createdAt, $updatedAt are read-only — skip on import
                     const fd = {
                         name,
                         site: get(cells, 'site') || null,
