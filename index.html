@@ -1128,7 +1128,7 @@
                 </div>
                 <div class="topbar-actions">
                     <span class="topbar-badge" id="topbarBadge">首頁</span>
-                    <div class="avatar" title="鋒兄">鋒</div>
+                    <div class="avatar" id="topbarAvatar" title="鋒兄">鋒</div>
                 </div>
             </header>
 
@@ -1269,6 +1269,14 @@
 
           <div class="settings-body">
             <div class="settings-field">
+              <label class="settings-label">使用者暱稱</label>
+              <div class="settings-hint">顯示於右上角頭像旁（選填）</div>
+              <input id="aw_nickname" class="settings-input" type="text"
+                placeholder="例如：鋒兄"
+                value="${cfg.nickname || ''}" />
+            </div>
+
+            <div class="settings-field">
               <label class="settings-label">Endpoint (端點)</label>
               <div class="settings-hint">例如：https://cloud.appwrite.io/v1</div>
               <input id="aw_endpoint" class="settings-input" type="url"
@@ -1316,6 +1324,7 @@
             const connBadge = panel.querySelector('#connBadge');
 
             const getFields = () => ({
+                nickname: panel.querySelector('#aw_nickname').value.trim(),
                 endpoint: panel.querySelector('#aw_endpoint').value.trim().replace(/\/$/, ''),
                 projectId: panel.querySelector('#aw_project').value.trim(),
                 apiKey: panel.querySelector('#aw_apikey').value.trim(),
@@ -1349,6 +1358,7 @@
                 saveAppwriteConfig(cfg);
                 setBadge('connected', '✓ 已設定');
                 showToast('success', '✅ 設定已儲存至本機');
+                refreshAvatar();
             });
 
             // test
@@ -1390,7 +1400,7 @@
             clearBtn.addEventListener('click', () => {
                 if (!confirm('確定要清除所有 Appwrite 設定嗎？')) return;
                 localStorage.removeItem(APPWRITE_KEY);
-                ['#aw_endpoint', '#aw_project', '#aw_apikey'].forEach(s => {
+                ['#aw_nickname', '#aw_endpoint', '#aw_project', '#aw_apikey'].forEach(s => {
                     panel.querySelector(s).value = '';
                 });
                 setBadge('disconnected', '未設定');
@@ -1772,7 +1782,17 @@
         document.getElementById('brandBtn').addEventListener('click', toggleSidebar);
 
         // init
+        function refreshAvatar() {
+            const cfg = getAppwriteConfig();
+            const av = document.getElementById('topbarAvatar');
+            if (!av) return;
+            const name = (cfg.nickname || '鋒').trim();
+            av.textContent = name.charAt(0) || '鋒';
+            av.title = name || '鋒兄';
+        }
+
         renderNav();
+        refreshAvatar();
     </script>
 </body>
 
