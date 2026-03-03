@@ -1524,7 +1524,8 @@
                 <div class="page-toolbar">
                     <span class="page-toolbar-title">📬 訂閱清單</span>
                     <span class="page-toolbar-count" id="subCount">—</span>
-                    <button class="btn btn-danger" id="subBulkDelBtn" style="margin-left:auto;display:none">🗑️ 刪除所選 (<span id="subSelCount">0</span>)</button>
+                    <span style="flex:1"></span>
+                    <button class="btn btn-danger" id="subBulkDelBtn" style="display:none">🗑️ 刪除所選</button>
                     <button class="btn btn-ghost" id="subExportBtn">⬇️ 匯出 CSV</button>
                     <button class="btn btn-ghost" id="subImportBtn">⬆️ 匯入 CSV</button>
                     <input type="file" id="subImportFile" accept=".csv" style="display:none" />
@@ -1785,7 +1786,6 @@
 
             /* ── Selection & Bulk Delete ── */
             const bulkDelBtn = page.querySelector('#subBulkDelBtn');
-            const selCountEl = page.querySelector('#subSelCount');
             const bulkModal = page.querySelector('#subBulkModal');
             const bulkCount = page.querySelector('#subBulkCount');
             const bulkInput = page.querySelector('#subBulkInput');
@@ -1800,14 +1800,17 @@
             function updateSelUI() {
                 const sel = getSelectedIds();
                 const n = sel.length;
-                selCountEl.textContent = n;
+                const total = body.querySelectorAll('.sub-chk').length;
+                // Update count badge: show selection info when any selected
+                countEl.textContent = n > 0
+                    ? `${total} 筆 ／ 已選 ${n}`
+                    : `${total} 筆`;
                 bulkDelBtn.style.display = n > 0 ? '' : 'none';
-                // sync select-all state
-                const all = body.querySelectorAll('.sub-chk');
+                // sync select-all checkbox state
                 const chkAll = body.querySelector('#subCheckAll');
-                if (chkAll && all.length) {
-                    chkAll.indeterminate = n > 0 && n < all.length;
-                    chkAll.checked = n === all.length;
+                if (chkAll && total) {
+                    chkAll.indeterminate = n > 0 && n < total;
+                    chkAll.checked = n === total;
                 }
             }
 
