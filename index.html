@@ -59,6 +59,28 @@
             width: 100vw;
         }
 
+        /* auto-collapse sidebar when effective viewport is narrow (e.g. 150% zoom) */
+        @media (max-width: 960px) {
+            :root {
+                --sidebar-width: var(--sidebar-collapsed);
+            }
+
+            .sidebar {
+                width: var(--sidebar-collapsed) !important;
+                min-width: var(--sidebar-collapsed) !important;
+            }
+
+            .brand-text,
+            .nav-label {
+                opacity: 0 !important;
+                pointer-events: none;
+            }
+
+            .toggle-btn {
+                transform: rotate(180deg);
+            }
+        }
+
         /* ── Sidebar ── */
         .sidebar {
             width: var(--sidebar-width);
@@ -826,6 +848,10 @@
         .settings-panel {
             width: 100%;
             max-width: 720px;
+            align-self: flex-start;
+            /* prevent center-overflow clipping at high zoom */
+            margin: 0 auto;
+            /* keep horizontal centering */
             animation: contentFadeIn 0.35s ease;
         }
 
