@@ -821,6 +821,30 @@
             });
         }
 
+        /* ── Appwrite Table Auto-mapping ── */
+        const TABLE_MAP = {
+            home: null,
+            dashboard: null,
+            subscribe: 'subscribes',
+            food: 'foods',
+            notes: 'notes',
+            common: 'commons',
+            images: 'images',
+            videos: 'videos',
+            music: 'music',
+            docs: 'documents',
+            podcast: 'podcasts',
+            bank: 'bank',
+            routine: 'routines',
+            settings: null,
+            about: null,
+        };
+
+        /** 取得當前頁面對應的 Appwrite collection 名稱 */
+        function getTableName(pageId) {
+            return TABLE_MAP[pageId] || null;
+        }
+
         /* ── Settings Panel ── */
         const APPWRITE_KEY = 'feng_appwrite_cfg';
 
@@ -881,13 +905,7 @@
               </div>
             </div>
 
-            <div class="settings-field">
-              <label class="settings-label">Table by name（資料表名稱）</label>
-              <div class="settings-hint">依名稱指定 Appwrite Collection（如 music、notes）</div>
-              <input id="aw_table" class="settings-input" type="text"
-                placeholder="例如：music、notes、docs"
-                value="${cfg.tableName || ''}" />
-            </div>
+
           </div>
 
           <div class="settings-footer">
@@ -913,7 +931,6 @@
                 endpoint: panel.querySelector('#aw_endpoint').value.trim().replace(/\/$/, ''),
                 projectId: panel.querySelector('#aw_project').value.trim(),
                 apiKey: panel.querySelector('#aw_apikey').value.trim(),
-                tableName: panel.querySelector('#aw_table').value.trim(),
             });
 
             function showToast(type, msg) {
@@ -977,7 +994,7 @@
             clearBtn.addEventListener('click', () => {
                 if (!confirm('確定要清除所有 Appwrite 設定嗎？')) return;
                 localStorage.removeItem(APPWRITE_KEY);
-                ['#aw_endpoint', '#aw_project', '#aw_apikey', '#aw_table'].forEach(s => {
+                ['#aw_endpoint', '#aw_project', '#aw_apikey'].forEach(s => {
                     panel.querySelector(s).value = '';
                 });
                 setBadge('disconnected', '未設定');
