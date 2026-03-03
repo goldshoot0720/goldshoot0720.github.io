@@ -1524,7 +1524,8 @@
                 <div class="page-toolbar">
                     <span class="page-toolbar-title">📬 訂閱清單</span>
                     <span class="page-toolbar-count" id="subCount">—</span>
-                    <button class="btn btn-ghost" id="subExportBtn" style="margin-left:auto">⬇️ 匯出 CSV</button>
+                    <button class="btn btn-danger" id="subBulkDelBtn" style="margin-left:auto;display:none">🗑️ 刪除所選 (<span id="subSelCount">0</span>)</button>
+                    <button class="btn btn-ghost" id="subExportBtn">⬇️ 匯出 CSV</button>
                     <button class="btn btn-ghost" id="subImportBtn">⬆️ 匯入 CSV</button>
                     <input type="file" id="subImportFile" accept=".csv" style="display:none" />
                     <button class="btn btn-primary" id="subAddBtn">＋ 新增訂閱</button>
@@ -1593,6 +1594,28 @@
                             <button class="btn btn-ghost" id="subCancelBtn">取消</button>
                         </div>
                     </div>
+                </div>
+
+                <!-- Bulk Delete Confirm Modal -->
+                <div class="modal-overlay" id="subBulkModal" style="display:none">
+                    <div class="modal" style="max-width:460px">
+                        <div class="modal-header">
+                            <span class="modal-title" style="color:#fc8b4a">⚠️ 確認批次刪除</span>
+                            <div class="modal-close" id="subBulkClose">✕</div>
+                        </div>
+                        <div class="modal-body">
+                            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">
+                                即將刪除 <strong id="subBulkCount" style="color:#fc8b4a">0</strong> 筆訂閱記錄，此操作<strong>無法復原</strong>。
+                            </p>
+                            <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">請輸入以下文字以確認：</p>
+                            <code style="display:block;padding:8px 12px;background:var(--bg-dark);border-radius:6px;font-size:13px;color:#f6e05e;margin-bottom:12px;border:1px solid var(--border)">DELETE subscription</code>
+                            <input id="subBulkInput" class="settings-input" type="text" placeholder="輸入 DELETE subscription" autocomplete="off" />
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-danger" id="subBulkConfirmBtn" disabled>🗑️ 確認刪除</button>
+                            <button class="btn btn-ghost" id="subBulkCancelBtn">取消</button>
+                        </div>
+                    </div>
                 </div>`;
             return wrap;
         }
@@ -1614,6 +1637,7 @@
                     ? `<a href="${d.site}" target="_blank" rel="noopener" class="td-link" style="color:var(--text-primary);font-weight:500">${d.name || '—'}</a><br><span style="font-size:10px;color:var(--text-muted)">${d.site}</span>`
                     : `${d.name || '—'}`;
                 return `<tr>
+                    <td style="width:36px;text-align:center"><input type="checkbox" class="sub-chk form-checkbox" data-id="${d.$id}"></td>
                     <td class="td-name">${nameCell}</td>
                     <td class="td-price">${fmtPrice(d.price, d.currency)}</td>
                     <td>${fmtDate(d.nextdate)}${dayBadge}</td>
@@ -1631,6 +1655,7 @@
             return `<div class="data-table-wrap">
                 <table class="data-table">
                     <thead><tr>
+                        <th style="width:36px"><input type="checkbox" id="subCheckAll" class="form-checkbox" title="全選"></th>
                         <th>名稱</th><th>金額</th><th>下次扣款</th>
                         <th>帳號</th><th>備註</th><th>狀態</th><th>操作</th>
                     </tr></thead>
@@ -1756,6 +1781,82 @@
             document.addEventListener('keydown', function escHandler(e) {
                 if (e.key === 'Escape' && modal.style.display !== 'none') closeModal();
                 if (!page.isConnected) document.removeEventListener('keydown', escHandler);
+            });
+
+            /* ── Selection & Bulk Delete ── */
+            const bulkDelBtn = page.querySelector('#subBulkDelBtn');
+            const selCountEl = page.querySelector('#subSelCount');
+            const bulkModal = page.querySelector('#subBulkModal');
+            const bulkCount = page.querySelector('#subBulkCount');
+            const bulkInput = page.querySelector('#subBulkInput');
+            const bulkConfirm = page.querySelector('#subBulkConfirmBtn');
+
+            const CONFIRM_PHRASE = 'DELETE subscription';
+
+            function getSelectedIds() {
+                return [...body.querySelectorAll('.sub-chk:checked')].map(c => c.dataset.id);
+            }
+
+            function updateSelUI() {
+                const sel = getSelectedIds();
+                const n = sel.length;
+                selCountEl.textContent = n;
+                bulkDelBtn.style.display = n > 0 ? '' : 'none';
+                // sync select-all state
+                const all = body.querySelectorAll('.sub-chk');
+                const chkAll = body.querySelector('#subCheckAll');
+                if (chkAll && all.length) {
+                    chkAll.indeterminate = n > 0 && n < all.length;
+                    chkAll.checked = n === all.length;
+                }
+            }
+
+            // Delegate selection changes from table body
+            body.addEventListener('change', e => {
+                if (e.target.id === 'subCheckAll') {
+                    body.querySelectorAll('.sub-chk').forEach(c => c.checked = e.target.checked);
+                }
+                updateSelUI();
+            });
+
+            // Open bulk confirm modal
+            bulkDelBtn.addEventListener('click', () => {
+                const ids = getSelectedIds();
+                if (!ids.length) return;
+                bulkCount.textContent = ids.length;
+                bulkInput.value = '';
+                bulkConfirm.disabled = true;
+                bulkModal.style.display = 'flex';
+                bulkInput.focus();
+            });
+
+            const closeBulkModal = () => { bulkModal.style.display = 'none'; };
+            page.querySelector('#subBulkClose').addEventListener('click', closeBulkModal);
+            page.querySelector('#subBulkCancelBtn').addEventListener('click', closeBulkModal);
+            bulkModal.addEventListener('click', e => { if (e.target === bulkModal) closeBulkModal(); });
+
+            // Enable confirm button only when phrase matches exactly
+            bulkInput.addEventListener('input', () => {
+                bulkConfirm.disabled = bulkInput.value.trim() !== CONFIRM_PHRASE;
+            });
+
+            // Execute bulk delete
+            bulkConfirm.addEventListener('click', async () => {
+                const ids = getSelectedIds();
+                if (!ids.length) return;
+                bulkConfirm.disabled = true;
+                bulkConfirm.textContent = `⏳ 0/${ids.length}`;
+                let ok = 0, fail = 0;
+                for (let i = 0; i < ids.length; i++) {
+                    try { await deleteSub(ids[i]); ok++; }
+                    catch { fail++; }
+                    bulkConfirm.textContent = `⏳ ${i + 1}/${ids.length}`;
+                }
+                closeBulkModal();
+                bulkDelBtn.style.display = 'none';
+                bulkConfirm.textContent = '🗑️ 確認刪除';
+                if (fail) alert(`刪除完成：成功 ${ok} 筆，失敗 ${fail} 筆`);
+                await loadData();
             });
 
             /* ── CSV Export ── */
