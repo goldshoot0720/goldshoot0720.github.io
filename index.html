@@ -1361,14 +1361,22 @@
                 setBadge('testing', '⏳ 測試中…');
                 testBtn.disabled = true;
                 try {
-                    const url = `${cfg.endpoint}/health`;
-                    const res = await fetch(url, { signal: AbortSignal.timeout(6000) });
-                    if (res.ok) {
+                    // /locale supports CORS from browser; /health does not.
+                    // Any HTTP response (including 4xx) means the endpoint is reachable.
+                    const url = `${cfg.endpoint}/locale`;
+                    const res = await fetch(url, {
+                        signal: AbortSignal.timeout(8000),
+                        headers: {
+                            'X-Appwrite-Project': cfg.projectId,
+                            'Content-Type': 'application/json',
+                        },
+                    });
+                    if (res.status < 500) {
                         setBadge('connected', '✓ 連線成功');
-                        showToast('success', `✅ 連線成功！Appwrite 服務正常運作`);
+                        showToast('success', `✅ 連線成功！Appwrite 端點回應 HTTP ${res.status}`);
                     } else {
-                        setBadge('disconnected', '✗ 回應異常');
-                        showToast('error', `⚠️ 伺服器回應 HTTP ${res.status}`);
+                        setBadge('disconnected', '✗ 伺服器錯誤');
+                        showToast('error', `⚠️ 伺服器回應 HTTP ${res.status}，請確認 Endpoint 是否正確`);
                     }
                 } catch (e) {
                     setBadge('disconnected', '✗ 無法連線');
