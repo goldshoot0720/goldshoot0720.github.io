@@ -424,14 +424,28 @@
             flex-direction: column;
             align-items: center;
             gap: 16px;
-            opacity: 0.25;
             pointer-events: none;
             animation: fadeIn 0.5s ease;
         }
 
         .placeholder-icon {
             font-size: 64px;
-            filter: grayscale(1);
+            filter: grayscale(0.4);
+            opacity: 0.6;
+        }
+
+        .placeholder-wip-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: rgba(246, 224, 94, 0.1);
+            border: 1px solid rgba(246, 224, 94, 0.3);
+            color: #f6e05e;
         }
 
         /* ── Page Panel (full-width pages) ── */
@@ -1468,16 +1482,24 @@
         /* ══════════════════════════════════════════
            Subscribe CRUD
         ══════════════════════════════════════════ */
-        const PAGE_SIZE = 5000;
+        const PAGE_SIZE = 200;
 
-        async function fetchSubs(offset = 0) {
+        /**
+         * 游標分頁取訂閱記錄
+         * @param {string|null} cursorAfter  - 往下一頁：上一批最後一筆的 $id
+         * @param {string|null} cursorBefore - 往上一頁：上一批第一筆的 $id
+         */
+        async function fetchSubs(cursorAfter = null, cursorBefore = null) {
             const db = await awGetDbId();
             const col = await awGetSubColId();
-            const q = [
+            const queries = [
                 `queries[]=${encodeURIComponent(JSON.stringify({ method: 'limit', values: [PAGE_SIZE] }))}`,
-                `queries[]=${encodeURIComponent(JSON.stringify({ method: 'offset', values: [offset] }))}`,
-            ].join('&');
-            const data = await awFetch(`/databases/${db}/collections/${col}/documents?${q}`);
+            ];
+            if (cursorAfter)
+                queries.push(`queries[]=${encodeURIComponent(JSON.stringify({ method: 'cursorAfter', values: [cursorAfter] }))}`);
+            else if (cursorBefore)
+                queries.push(`queries[]=${encodeURIComponent(JSON.stringify({ method: 'cursorBefore', values: [cursorBefore] }))}`);
+            const data = await awFetch(`/databases/${db}/collections/${col}/documents?${queries.join('&')}`);
             return { documents: data?.documents ?? [], total: data?.total ?? 0 };
         }
 
@@ -1726,30 +1748,39 @@
 
             const closeModal = () => { modal.style.display = 'none'; editingId = null; };
 
-            let currentOffset = 0;
+            // 游標堆疊：每往下一頁就 push 當頁第一筆 $id；上一頁 pop
+            let cursorStack = [];  // stack of first-doc $id of each page (for going back)
+            let lastCursorAfter = null;  // $id of last doc in current page
             let totalDocs = 0;
+            let currentPage = 1;
 
             const prevBtn = page.querySelector('#subPrevBtn');
             const nextBtn = page.querySelector('#subNextBtn');
             const pageInfoEl = page.querySelector('#subPageInfo');
 
-            function updatePageControls() {
-                const totalPages = Math.max(1, Math.ceil(totalDocs / PAGE_SIZE));
-                const curPage = Math.floor(currentOffset / PAGE_SIZE) + 1;
-                const from = currentOffset + 1;
-                const to = Math.min(currentOffset + PAGE_SIZE, totalDocs);
-                pageInfoEl.textContent = totalDocs > 0 ? `第 ${curPage} / ${totalPages} 頁` : '第 1 / 1 頁';
-                prevBtn.disabled = currentOffset === 0;
-                nextBtn.disabled = currentOffset + PAGE_SIZE >= totalDocs;
+            function totalLabel(n) {
+                // Appwrite caps the total count at 5000; show '5000+' when hit
+                return n >= 5000 ? '5000+ 筆 (Appwrite 顯示上限)' : `${n} 筆`;
             }
 
-            async function loadData() {
+            function updatePageControls() {
+                const hasMore = docs.length === PAGE_SIZE;
+                pageInfoEl.textContent = `第 ${currentPage} 頁  / 共 ${totalLabel(totalDocs)}`;
+                prevBtn.disabled = currentPage <= 1;
+                nextBtn.disabled = !hasMore;
+            }
+
+            async function loadData(cursorAfter = null, cursorBefore = null) {
                 body.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div><span>載入中…</span></div>';
                 try {
-                    const result = await fetchSubs(currentOffset);
+                    const result = await fetchSubs(cursorAfter, cursorBefore);
                     docs = result.documents;
                     totalDocs = result.total;
-                    countEl.textContent = `${totalDocs} 筆`;
+                    // 若用 cursorBefore，Appwrite 傳回的順序可能相反，不需 reverse（Appwrite 保持原排序）
+                    lastCursorAfter = docs.length ? docs[docs.length - 1].$id : null;
+                    // Appwrite 的 total 在超過 5000 筆時會截斷為 5000，顯示時加上提示
+                    countEl.textContent = totalLabel(totalDocs);
+                    if (totalDocs >= 5000) countEl.title = 'Appwrite REST API 的 total 欄位最多顯示 5000，實際筆數可能更多，游標翻頁仍可正常存取全部資料';
                     updatePageControls();
                     body.innerHTML = buildSubTable(docs);
                     bindTableEvents();
@@ -1762,14 +1793,19 @@
             }
 
             prevBtn.addEventListener('click', async () => {
-                if (currentOffset === 0) return;
-                currentOffset = Math.max(0, currentOffset - PAGE_SIZE);
-                await loadData();
+                if (currentPage <= 1) return;
+                currentPage--;
+                const prevCursor = cursorStack.pop() || null;  // pop to go back
+                // When going back, we need the cursor for the page before current
+                // cursorStack now has the cursor to the start of the current-1 page
+                const backCursor = cursorStack.length ? cursorStack[cursorStack.length - 1] : null;
+                await loadData(backCursor, null);
             });
             nextBtn.addEventListener('click', async () => {
-                if (currentOffset + PAGE_SIZE >= totalDocs) return;
-                currentOffset += PAGE_SIZE;
-                await loadData();
+                if (!lastCursorAfter) return;
+                currentPage++;
+                cursorStack.push(lastCursorAfter);
+                await loadData(lastCursorAfter, null);
             });
 
             function bindTableEvents() {
@@ -1846,17 +1882,17 @@
             function updateSelUI() {
                 const sel = getSelectedIds();
                 const n = sel.length;
-                const total = body.querySelectorAll('.sub-chk').length;
-                // Update count badge: show selection info when any selected
+                const pageCount = body.querySelectorAll('.sub-chk').length;
+                // Update count badge: show total + selection info
                 countEl.textContent = n > 0
-                    ? `${total} 筆 ／ 已選 ${n}`
-                    : `${total} 筆`;
+                    ? `${totalDocs} 筆 ／ 已選 ${n}`
+                    : `${totalDocs} 筆`;
                 bulkDelBtn.style.display = n > 0 ? '' : 'none';
                 // sync select-all checkbox state
                 const chkAll = body.querySelector('#subCheckAll');
-                if (chkAll && total) {
-                    chkAll.indeterminate = n > 0 && n < total;
-                    chkAll.checked = n === total;
+                if (chkAll && pageCount) {
+                    chkAll.indeterminate = n > 0 && n < pageCount;
+                    chkAll.checked = n === pageCount;
                 }
             }
 
@@ -2042,8 +2078,11 @@
             } else {
                 contentArea.classList.remove('full-page');
                 defaultPlaceholder.style.display = '';
-                document.getElementById('placeholderIcon').textContent = item.icon;
-                document.getElementById('placeholderText').textContent = `${item.label} — 內容尚待建置`;
+                defaultPlaceholder.innerHTML = `
+                    <div class="placeholder-icon">${item.icon}</div>
+                    <div class="placeholder-wip-badge">🚧 建置中</div>
+                    <div class="placeholder-text">${item.label} — 尚待實作</div>
+                `;
             }
 
             renderNav();
