@@ -1001,6 +1001,250 @@
             background: rgba(255, 255, 255, 0.015);
         }
 
+        /* ── Provider Picker ── */
+        .provider-picker {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .provider-picker-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .provider-body {
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .provider-cat-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .provider-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .provider-card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            width: 88px;
+            height: 68px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border);
+            background: var(--bg-dark);
+            cursor: pointer;
+            transition: all 0.18s ease;
+            user-select: none;
+        }
+
+        .provider-card:hover {
+            border-color: rgba(99, 179, 237, 0.35);
+            background: var(--bg-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        .provider-card.active {
+            border-color: rgba(99, 179, 237, 0.6);
+            background: rgba(99, 179, 237, 0.08);
+            box-shadow: 0 0 0 3px rgba(99, 179, 237, 0.12);
+        }
+
+        .provider-card.wip {
+            opacity: 0.65;
+        }
+
+        .provider-card.wip:hover {
+            opacity: 0.85;
+        }
+
+        .provider-card-icon {
+            font-size: 22px;
+            line-height: 1;
+        }
+
+        .provider-card-name {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-align: center;
+            line-height: 1.2;
+        }
+
+        .provider-card.active .provider-card-name {
+            color: var(--accent);
+        }
+
+        .provider-wip-badge {
+            position: absolute;
+            top: 4px;
+            right: 5px;
+            font-size: 10px;
+            line-height: 1;
+        }
+
+        .provider-wip-notice {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 32px 20px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .provider-wip-notice .wip-big {
+            font-size: 36px;
+        }
+
+        .provider-wip-notice .wip-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        /* ── Profile Bar ── */
+        .profile-bar {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .profile-bar-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-bottom: 1px solid var(--border);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .profile-bar-label {
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+
+        .profile-tabs {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 14px;
+            flex-wrap: wrap;
+        }
+
+        .profile-tab {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 10px 5px 12px;
+            border-radius: 20px;
+            border: 1.5px solid var(--border);
+            background: var(--bg-dark);
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            user-select: none;
+            max-width: 200px;
+        }
+
+        .profile-tab:hover {
+            border-color: rgba(99, 179, 237, 0.35);
+            color: var(--text-primary);
+        }
+
+        .profile-tab.active {
+            border-color: rgba(99, 179, 237, 0.6);
+            background: rgba(99, 179, 237, 0.1);
+            color: var(--accent);
+        }
+
+        .profile-tab-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .profile-tab-del {
+            font-size: 11px;
+            line-height: 1;
+            opacity: 0.5;
+            flex-shrink: 0;
+            width: 14px;
+            height: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: opacity 0.15s, background 0.15s;
+        }
+
+        .profile-tab-del:hover {
+            opacity: 1;
+            background: rgba(252, 129, 74, 0.25);
+            color: #fc8b4a;
+        }
+
+        .profile-add-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 1.5px dashed var(--border);
+            background: transparent;
+            color: var(--text-muted);
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s;
+            flex-shrink: 0;
+        }
+
+        .profile-add-btn:hover {
+            border-color: rgba(99, 179, 237, 0.5);
+            color: var(--accent);
+            background: rgba(99, 179, 237, 0.06);
+        }
+
+        .profile-tab-name[contenteditable="true"] {
+            outline: none;
+            border-bottom: 1px solid var(--accent);
+            min-width: 40px;
+        }
+
         .btn {
             display: inline-flex;
             align-items: center;
@@ -1235,8 +1479,10 @@
             return TABLE_MAP[pageId] || null;
         }
 
-        /* ── Settings Panel ── */
-        const APPWRITE_KEY = 'feng_appwrite_cfg';
+        /* ── Settings / Profile Storage ── */
+        const APPWRITE_KEY = 'feng_appwrite_cfg';   // legacy (migration)
+        const PROFILES_KEY = 'feng_profiles';
+        const ACTIVE_KEY = 'feng_active_profile';
 
         const APPWRITE_DEFAULTS = {
             endpoint: 'https://tor.cloud.appwrite.io/v1',
@@ -1244,32 +1490,148 @@
             apiKey: 'standard_69882a84f42f0170da80c05d2183cac2f71a531ca044b71f093ffbed3978bc73c721b6a15263a32fee437eaa15a81048795876100bd8eb31361592d0b69ec843a5a4e0d327386452b7292c09d99ffd42c899f63f06df86a071b58c738118efbe794a7de788e6e629623d26d510ff07757de942d7852739e0c409d52a19e553a2',
         };
 
-        function loadAppwriteConfig() {
-            try { return JSON.parse(localStorage.getItem(APPWRITE_KEY)) || {}; }
-            catch { return {}; }
+        function _newId() { return String(Date.now()); }
+
+        /** 讀取所有設定檔（含舊資料自動遷移） */
+        function loadProfiles() {
+            try {
+                const raw = localStorage.getItem(PROFILES_KEY);
+                if (raw) return JSON.parse(raw);
+                // migrate legacy
+                const legacy = JSON.parse(localStorage.getItem(APPWRITE_KEY) || '{}');
+                const nick = legacy.nickname || 'default';
+                const id = _newId();
+                const migrated = [{ id, name: `Appwrite-${nick}`, provider: 'appwrite', ...legacy }];
+                localStorage.setItem(PROFILES_KEY, JSON.stringify(migrated));
+                localStorage.setItem(ACTIVE_KEY, id);
+                return migrated;
+            } catch { return []; }
         }
 
-        function saveAppwriteConfig(cfg) {
-            localStorage.setItem(APPWRITE_KEY, JSON.stringify(cfg));
+        function saveProfiles(profiles) {
+            localStorage.setItem(PROFILES_KEY, JSON.stringify(profiles));
         }
 
-        /** 取得有效設定（已儲存 > 預設） */
+        function getActiveId() {
+            const id = localStorage.getItem(ACTIVE_KEY);
+            const profiles = loadProfiles();
+            if (profiles.find(p => p.id === id)) return id;
+            return profiles[0]?.id || null;
+        }
+
+        function setActiveId(id) {
+            localStorage.setItem(ACTIVE_KEY, id);
+        }
+
+        /** 取得目前活躍設定檔（合併預設值） */
         function getAppwriteConfig() {
-            const saved = loadAppwriteConfig();
-            return Object.assign({}, APPWRITE_DEFAULTS, saved);
+            const profiles = loadProfiles();
+            const activeId = getActiveId();
+            const profile = profiles.find(p => p.id === activeId) || profiles[0] || {};
+            return Object.assign({}, APPWRITE_DEFAULTS, profile);
         }
+
+        /** 儲存欄位到目前活躍設定檔 */
+        function saveAppwriteConfig(fields) {
+            const profiles = loadProfiles();
+            const activeId = getActiveId();
+            const idx = profiles.findIndex(p => p.id === activeId);
+            if (idx >= 0) Object.assign(profiles[idx], fields);
+            saveProfiles(profiles);
+            // keep legacy key in sync for external consumers
+            localStorage.setItem(APPWRITE_KEY, JSON.stringify(profiles[idx] || fields));
+        }
+
+        /* ── Provider definitions ── */
+        const PROVIDERS = [
+            {
+                cat: 'PaaS 系列', items: [
+                    { id: 'appwrite', icon: '☁️', name: 'Appwrite', done: true },
+                    { id: 'supabase', icon: '🟢', name: 'Supabase', done: false },
+                    { id: 'nhost', icon: '🔷', name: 'Nhost', done: false },
+                    { id: 'sanity', icon: '🎯', name: 'Sanity', done: false },
+                    { id: 'contentful', icon: '📦', name: 'Contentful', done: false },
+                    { id: 'strapi', icon: '🚀', name: 'Strapi', done: false },
+                    { id: 'back4app', icon: '🅱️', name: 'Back4App', done: false },
+                    { id: 'xano', icon: '⚡', name: 'Xano', done: false },
+                    { id: 'backendless', icon: '🔌', name: 'Backendless', done: false },
+                ]
+            },
+            {
+                cat: '只有資料庫', items: [
+                    { id: 'sqlitecloud', icon: '🗄️', name: 'SQLite Cloud', done: false },
+                    { id: 'motherduck', icon: '🦆', name: 'MotherDuck', done: false },
+                    { id: 'mongodb', icon: '🍃', name: 'MongoDB', done: false },
+                    { id: 'neon', icon: '💠', name: 'Neon', done: false },
+                    { id: 'firebase', icon: '🔥', name: 'Firebase', done: false },
+                    { id: '8base', icon: '8️⃣', name: '8base', done: false },
+                ]
+            },
+            {
+                cat: '只有雲端空間', items: [
+                    { id: 'vercel', icon: '▲', name: 'Vercel', done: false },
+                    { id: 'cloudflare', icon: '🌐', name: 'CloudFlare', done: false },
+                ]
+            },
+        ];
 
         function renderSettings() {
             const cfg = getAppwriteConfig();
             const hasConfig = !!(cfg.endpoint && cfg.projectId);
+            const selectedProvider = cfg.provider || 'appwrite';
 
             const panel = document.createElement('div');
             panel.className = 'settings-panel';
+
+            /* Build provider picker HTML */
+            const catsHtml = PROVIDERS.map(cat => `
+                <div>
+                    <div class="provider-cat-label">${cat.cat}</div>
+                    <div class="provider-grid">
+                        ${cat.items.map(p => `
+                            <div class="provider-card${p.done ? '' : ' wip'}${p.id === selectedProvider ? ' active' : ''}"
+                                 data-provider="${p.id}" title="${p.name}${p.done ? '' : '（尚未實作）'}">
+                                ${!p.done ? '<span class="provider-wip-badge">🚧</span>' : ''}
+                                <span class="provider-card-icon">${p.icon}</span>
+                                <span class="provider-card-name">${p.name}</span>
+                            </div>`).join('')}
+                    </div>
+                </div>`).join('');
+
+            const isAppwrite = selectedProvider === 'appwrite';
+            const selectedName = PROVIDERS.flatMap(c => c.items).find(p => p.id === selectedProvider)?.name || selectedProvider;
+
+            /* Build profile tabs HTML */
+            const profiles = loadProfiles();
+            const activeId = getActiveId();
+            const profileTabsHtml = profiles.map(prof => `
+                <div class="profile-tab${prof.id === activeId ? ' active' : ''}" data-profile-id="${prof.id}">
+                    <span class="profile-tab-name">${prof.name}</span>
+                    <span class="profile-tab-del" data-del-id="${prof.id}" title="刪除此設定檔">✕</span>
+                </div>`).join('');
+
             panel.innerHTML = `
         <div id="settingsToast"></div>
 
-        <!-- Appwrite 區塊 -->
-        <div class="settings-section">
+        <!-- Profile Bar -->
+        <div class="profile-bar">
+          <div class="profile-bar-header">
+            <span class="profile-bar-label">📋 設定檔</span>
+          </div>
+          <div class="profile-tabs" id="profileTabs">
+            ${profileTabsHtml}
+            <button class="profile-add-btn" id="profileAddBtn" title="新增設定檔">＋</button>
+          </div>
+        </div>
+
+        <!-- Provider Picker -->
+        <div class="provider-picker">
+          <div class="provider-picker-header">🗄️ 選擇後端平台</div>
+          <div class="provider-body">${catsHtml}</div>
+        </div>
+
+        <!-- Appwrite 設定區塊 -->
+        <div class="settings-section" id="awSection" style="${isAppwrite ? '' : 'display:none'}">
           <div class="settings-section-header">
             <div class="settings-section-icon">☁️</div>
             <div>
@@ -1314,14 +1676,23 @@
                 <button class="settings-eye-btn" id="eyeBtn" type="button" title="顯示/隱藏密鑰">👁️</button>
               </div>
             </div>
-
-
           </div>
 
           <div class="settings-footer">
             <button class="btn btn-primary" id="saveBtn">💾 儲存設定</button>
             <button class="btn btn-ghost" id="testBtn">🔗 測試連線</button>
             <button class="btn btn-danger" id="clearBtn" style="margin-left:auto">🗑️ 清除</button>
+          </div>
+        </div>
+
+        <!-- WIP notice (shown when a non-implemented provider is selected) -->
+        <div class="settings-section" id="wipSection" style="${isAppwrite ? 'display:none' : ''}">
+          <div class="provider-wip-notice">
+            <div class="wip-big">🚧</div>
+            <div class="wip-title" id="wipTitle">${selectedName} 尚未實作</div>
+            <div style="font-size:12px;color:var(--text-muted);max-width:320px">
+              此後端平台的整合功能正在規劃中，實作完成後將移除 🚧 提示。
+            </div>
           </div>
         </div>
       `;
@@ -1331,6 +1702,168 @@
 
         function bindSettingsEvents(panel) {
             const toast = panel.querySelector('#settingsToast');
+            const awSection = panel.querySelector('#awSection');
+            const wipSection = panel.querySelector('#wipSection');
+            const wipTitle = panel.querySelector('#wipTitle');
+            const profileTabs = panel.querySelector('#profileTabs');
+
+            /* ── Helpers ── */
+            const allProviders = PROVIDERS.flatMap(c => c.items);
+
+            function showToast(type, msg) {
+                toast.innerHTML = `<div class="settings-toast ${type}">${msg}</div>`;
+                setTimeout(() => { toast.innerHTML = ''; }, 4000);
+            }
+
+            /* ── Fill form fields from a profile object ── */
+            function fillFields(prof) {
+                panel.querySelector('#aw_nickname').value = prof.nickname || '';
+                panel.querySelector('#aw_endpoint').value = prof.endpoint || '';
+                panel.querySelector('#aw_project').value = prof.projectId || '';
+                panel.querySelector('#aw_apikey').value = prof.apiKey || '';
+                // update provider cards
+                const prov = prof.provider || 'appwrite';
+                panel.querySelectorAll('.provider-card').forEach(c =>
+                    c.classList.toggle('active', c.dataset.provider === prov));
+                currentProvider = prov;
+                if (prov === 'appwrite') {
+                    awSection.style.display = '';
+                    wipSection.style.display = 'none';
+                } else {
+                    awSection.style.display = 'none';
+                    wipSection.style.display = '';
+                    const info = allProviders.find(p => p.id === prov);
+                    if (wipTitle) wipTitle.textContent = `${info?.name || prov} 尚未實作`;
+                }
+                // badge
+                const connBadge = panel.querySelector('#connBadge');
+                if (connBadge) {
+                    const ok = !!(prof.endpoint && prof.projectId);
+                    connBadge.className = `settings-conn-badge ${ok ? 'connected' : 'disconnected'}`;
+                    connBadge.textContent = ok ? '✓ 已設定' : '未設定';
+                }
+            }
+
+            /* ── Render profile tab list ── */
+            function renderProfileTabs() {
+                const profiles = loadProfiles();
+                const activeId = getActiveId();
+                profileTabs.innerHTML = profiles.map(prof => `
+                    <div class="profile-tab${prof.id === activeId ? ' active' : ''}" data-profile-id="${prof.id}">
+                        <span class="profile-tab-name">${prof.name}</span>
+                        <span class="profile-tab-del" data-del-id="${prof.id}" title="刪除此設定檔">✕</span>
+                    </div>`).join('') +
+                    `<button class="profile-add-btn" id="profileAddBtn" title="新增設定檔">＋</button>`;
+                bindProfileTabEvents();
+            }
+
+            /* ── Switch to a profile ── */
+            function switchProfile(id) {
+                setActiveId(id);
+                const profiles = loadProfiles();
+                const prof = profiles.find(p => p.id === id) || {};
+                // highlight tab
+                profileTabs.querySelectorAll('.profile-tab').forEach(t =>
+                    t.classList.toggle('active', t.dataset.profileId === id));
+                fillFields(Object.assign({}, APPWRITE_DEFAULTS, prof));
+                refreshAvatar();
+            }
+
+            /* ── Bind profile tab click / delete / add / rename ── */
+            function bindProfileTabEvents() {
+                // click tab => switch
+                profileTabs.querySelectorAll('.profile-tab').forEach(tab => {
+                    tab.addEventListener('click', e => {
+                        if (e.target.classList.contains('profile-tab-del')) return;
+                        if (e.target.hasAttribute('contenteditable')) return;
+                        switchProfile(tab.dataset.profileId);
+                    });
+                });
+
+                // del button
+                profileTabs.querySelectorAll('.profile-tab-del').forEach(btn => {
+                    btn.addEventListener('click', e => {
+                        e.stopPropagation();
+                        const profiles = loadProfiles();
+                        if (profiles.length <= 1) { showToast('error', '⚠️ 至少保留一個設定檔'); return; }
+                        if (!confirm(`確定刪除「${profiles.find(p => p.id === btn.dataset.delId)?.name}」？`)) return;
+                        const newProfiles = profiles.filter(p => p.id !== btn.dataset.delId);
+                        saveProfiles(newProfiles);
+                        if (getActiveId() === btn.dataset.delId) setActiveId(newProfiles[0].id);
+                        renderProfileTabs();
+                        switchProfile(getActiveId());
+                    });
+                });
+
+                // double-click name => inline rename
+                profileTabs.querySelectorAll('.profile-tab-name').forEach(nameEl => {
+                    nameEl.addEventListener('dblclick', () => {
+                        nameEl.contentEditable = 'true';
+                        nameEl.focus();
+                        const range = document.createRange();
+                        range.selectNodeContents(nameEl);
+                        window.getSelection().removeAllRanges();
+                        window.getSelection().addRange(range);
+                    });
+                    nameEl.addEventListener('blur', () => {
+                        nameEl.contentEditable = 'false';
+                        const tab = nameEl.closest('.profile-tab');
+                        const id = tab?.dataset.profileId;
+                        const newName = nameEl.textContent.trim() || '未命名';
+                        nameEl.textContent = newName;
+                        const profiles = loadProfiles();
+                        const p = profiles.find(pr => pr.id === id);
+                        if (p) { p.name = newName; saveProfiles(profiles); }
+                    });
+                    nameEl.addEventListener('keydown', e => {
+                        if (e.key === 'Enter') { e.preventDefault(); nameEl.blur(); }
+                        if (e.key === 'Escape') { nameEl.blur(); }
+                    });
+                });
+
+                // add button
+                const addBtn = profileTabs.querySelector('#profileAddBtn');
+                if (addBtn) {
+                    addBtn.addEventListener('click', () => {
+                        const profiles = loadProfiles();
+                        const id = _newId();
+                        const name = `新設定檔-${profiles.length + 1}`;
+                        profiles.push({ id, name, provider: 'appwrite', nickname: '', endpoint: '', projectId: '', apiKey: '' });
+                        saveProfiles(profiles);
+                        setActiveId(id);
+                        renderProfileTabs();
+                        switchProfile(id);
+                    });
+                }
+            }
+
+            bindProfileTabEvents();
+
+            /* ── Provider card switches ── */
+            let currentProvider = getAppwriteConfig().provider || 'appwrite';
+
+            function switchProvider(id) {
+                currentProvider = id;
+                panel.querySelectorAll('.provider-card').forEach(card =>
+                    card.classList.toggle('active', card.dataset.provider === id));
+                const info = allProviders.find(p => p.id === id);
+                if (id === 'appwrite') {
+                    awSection.style.display = '';
+                    wipSection.style.display = 'none';
+                } else {
+                    awSection.style.display = 'none';
+                    wipSection.style.display = '';
+                    if (wipTitle) wipTitle.textContent = `${info?.name || id} 尚未實作`;
+                }
+                // persist into active profile immediately
+                saveAppwriteConfig({ provider: id });
+            }
+
+            panel.querySelectorAll('.provider-card').forEach(card => {
+                card.addEventListener('click', () => switchProvider(card.dataset.provider));
+            });
+
+            /* ── Appwrite form controls ── */
             const eyeBtn = panel.querySelector('#eyeBtn');
             const saveBtn = panel.querySelector('#saveBtn');
             const testBtn = panel.querySelector('#testBtn');
@@ -1344,17 +1877,11 @@
                 apiKey: panel.querySelector('#aw_apikey').value.trim(),
             });
 
-            function showToast(type, msg) {
-                toast.innerHTML = `<div class="settings-toast ${type}">${msg}</div>`;
-                setTimeout(() => { toast.innerHTML = ''; }, 4000);
-            }
-
             function setBadge(state, text) {
                 connBadge.className = `settings-conn-badge ${state}`;
                 connBadge.textContent = text;
             }
 
-            // eye toggle
             eyeBtn.addEventListener('click', () => {
                 const inp = panel.querySelector('#aw_apikey');
                 const show = inp.type === 'password';
@@ -1362,38 +1889,40 @@
                 eyeBtn.textContent = show ? '🙈' : '👁️';
             });
 
-            // save
             saveBtn.addEventListener('click', () => {
-                const cfg = getFields();
-                if (!cfg.endpoint || !cfg.projectId) {
+                const fields = getFields();
+                if (!fields.endpoint || !fields.projectId) {
                     showToast('error', '⚠️ Endpoint 及 Project ID 為必填欄位');
                     return;
                 }
-                saveAppwriteConfig(cfg);
+                // auto-update profile name if it's still default-ish
+                const profiles = loadProfiles();
+                const activeId = getActiveId();
+                const prof = profiles.find(p => p.id === activeId);
+                if (prof && (prof.name.startsWith('新設定檔') || prof.name === 'Appwrite-default')) {
+                    const provName = allProviders.find(p => p.id === currentProvider)?.name || currentProvider;
+                    prof.name = `${provName}-${fields.nickname || 'user'}`;
+                    saveProfiles(profiles);
+                    renderProfileTabs();
+                }
+                saveAppwriteConfig({ ...fields, provider: currentProvider });
                 setBadge('connected', '✓ 已設定');
                 showToast('success', '✅ 設定已儲存至本機');
                 refreshAvatar();
             });
 
-            // test
             testBtn.addEventListener('click', async () => {
-                const cfg = getFields();
-                if (!cfg.endpoint || !cfg.projectId) {
+                const fields = getFields();
+                if (!fields.endpoint || !fields.projectId) {
                     showToast('error', '⚠️ 請先填入 Endpoint 及 Project ID');
                     return;
                 }
                 setBadge('testing', '⏳ 測試中…');
                 testBtn.disabled = true;
                 try {
-                    // /locale supports CORS from browser; /health does not.
-                    // Any HTTP response (including 4xx) means the endpoint is reachable.
-                    const url = `${cfg.endpoint}/locale`;
-                    const res = await fetch(url, {
+                    const res = await fetch(`${fields.endpoint}/locale`, {
                         signal: AbortSignal.timeout(8000),
-                        headers: {
-                            'X-Appwrite-Project': cfg.projectId,
-                            'Content-Type': 'application/json',
-                        },
+                        headers: { 'X-Appwrite-Project': fields.projectId, 'Content-Type': 'application/json' },
                     });
                     if (res.status < 500) {
                         setBadge('connected', '✓ 連線成功');
@@ -1410,13 +1939,11 @@
                 }
             });
 
-            // clear
             clearBtn.addEventListener('click', () => {
-                if (!confirm('確定要清除所有 Appwrite 設定嗎？')) return;
-                localStorage.removeItem(APPWRITE_KEY);
-                ['#aw_nickname', '#aw_endpoint', '#aw_project', '#aw_apikey'].forEach(s => {
-                    panel.querySelector(s).value = '';
-                });
+                if (!confirm('確定要清除此設定檔的 Appwrite 設定嗎？')) return;
+                saveAppwriteConfig({ nickname: '', endpoint: '', projectId: '', apiKey: '' });
+                ['#aw_nickname', '#aw_endpoint', '#aw_project', '#aw_apikey'].forEach(s =>
+                    panel.querySelector(s).value = '');
                 setBadge('disconnected', '未設定');
                 showToast('success', '🗑️ 設定已清除');
             });
@@ -1976,7 +2503,9 @@
                 const csv = bom + CSV_HEADER + '\n' + rows.join('\n');
                 const a = document.createElement('a');
                 a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
-                a.download = `subscription_${new Date().toISOString().slice(0, 10)}.csv`;
+                const _nick = (getAppwriteConfig().nickname || 'user').trim().replace(/\s+/g, '_');
+                const _date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                a.download = `appwrite-${_nick}-subscription-${_date}.csv`;
                 a.click();
                 URL.revokeObjectURL(a.href);
             });
