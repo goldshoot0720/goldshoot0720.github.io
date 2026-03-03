@@ -1540,8 +1540,14 @@
                     <input type="file" id="subImportFile" accept=".csv" style="display:none" />
                     <button class="btn btn-primary" id="subAddBtn">＋ 新增訂閱</button>
                 </div>
-                <div class="page-body" id="subBody">
-                    <div class="spinner-wrap"><div class="spinner"></div><span>載入中…</span></div>
+                <div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column">
+                    <div class="page-body" id="subBody">
+                        <div class="spinner-wrap"><div class="spinner"></div><span>載入中…</span></div>
+                    </div>
+                    <div style="position:absolute;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:10">
+                        <button id="subScrollTop" title="跳轉頂部" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg-panel);color:var(--text-primary);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.4);transition:background .2s" onmouseover="this.style.background='var(--accent)'" onmouseout="this.style.background='var(--bg-panel)'">🔝</button>
+                        <button id="subScrollBot" title="跳轉底部" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg-panel);color:var(--text-primary);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.4);transition:background .2s" onmouseover="this.style.background='var(--accent)'" onmouseout="this.style.background='var(--bg-panel)'">⬇️</button>
+                    </div>
                 </div>
 
                 <!-- Add/Edit Modal -->
@@ -1900,6 +1906,14 @@
                 bulkConfirm.textContent = '🗑️ 確認刪除';
                 if (fail) alert(`刪除完成：成功 ${ok} 筆，失敗 ${fail} 筆`);
                 await loadData();
+            });
+
+            /* ── Scroll buttons ── */
+            page.querySelector('#subScrollTop').addEventListener('click', () => {
+                body.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+            page.querySelector('#subScrollBot').addEventListener('click', () => {
+                body.scrollTo({ top: body.scrollHeight, behavior: 'smooth' });
             });
 
             /* ── CSV Export ── */
