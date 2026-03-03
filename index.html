@@ -1643,6 +1643,10 @@
         <div class="profile-bar">
           <div class="profile-bar-header">
             <span class="profile-bar-label">📋 設定檔</span>
+            <span style="flex:1"></span>
+            <button id="profileExportBtn" class="btn btn-ghost" style="padding:4px 10px;font-size:11px" title="匯出所有設定檔 JSON">⬇️ 匯出</button>
+            <button id="profileImportBtn" class="btn btn-ghost" style="padding:4px 10px;font-size:11px" title="從 JSON 匯入設定檔">⬆️ 匯入</button>
+            <input type="file" id="profileImportFile" accept=".json" style="display:none" />
           </div>
           <div class="profile-tabs" id="profileTabs">
             ${profileTabsHtml}
@@ -1864,6 +1868,57 @@
             }
 
             bindProfileTabEvents();
+
+            /* ── Export all profiles ── */
+            panel.querySelector('#profileExportBtn').addEventListener('click', () => {
+                const profiles = loadProfiles();
+                const nick = (getAppwriteConfig().nickname || 'user').trim().replace(/\s+/g, '_');
+                const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+                const filename = `appwrite-${nick}-profiles-${date}.json`;
+                const blob = new Blob([JSON.stringify(profiles, null, 2)], { type: 'application/json' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                showToast('success', `✅ 已匯出 ${profiles.length} 個設定檔`);
+            });
+
+            /* ── Import profiles ── */
+            const profileImportFile = panel.querySelector('#profileImportFile');
+            panel.querySelector('#profileImportBtn').addEventListener('click', () => profileImportFile.click());
+            profileImportFile.addEventListener('change', async () => {
+                const file = profileImportFile.files[0];
+                if (!file) return;
+                profileImportFile.value = '';
+                try {
+                    const raw = await file.text();
+                    const imported = JSON.parse(raw);
+                    if (!Array.isArray(imported) || !imported.length) throw new Error('格式錯誤');
+                    // ensure each profile has an id
+                    imported.forEach(p => { if (!p.id) p.id = _newId(); });
+                    const existing = loadProfiles();
+                    let merged;
+                    if (existing.length === 1 && !existing[0].endpoint && !existing[0].projectId) {
+                        // only a blank profile exists — replace
+                        merged = imported;
+                    } else {
+                        const choice = confirm(`將 ${imported.length} 個設定檔：\n\n[確定] 追加到現有設定檔\n[取消] 取消匯入`);
+                        if (!choice) return;
+                        // merge: skip duplicates by id
+                        const existingIds = new Set(existing.map(p => p.id));
+                        const newOnes = imported.filter(p => !existingIds.has(p.id));
+                        merged = [...existing, ...newOnes];
+                    }
+                    saveProfiles(merged);
+                    setActiveId(merged[0].id);
+                    renderProfileTabs();
+                    switchProfile(merged[0].id);
+                    showToast('success', `✅ 已匯入 ${imported.length} 個設定檔`);
+                } catch (e) {
+                    showToast('error', `❌ 匯入失敗：${e.message}`);
+                }
+            });
 
             /* ── Provider card switches ── */
             let currentProvider = getAppwriteConfig().provider || 'appwrite';
