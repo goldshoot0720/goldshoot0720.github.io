@@ -882,11 +882,11 @@
             </div>
 
             <div class="settings-field">
-              <label class="settings-label">Database ID（資料庫 ID）</label>
-              <div class="settings-hint">留空則使用預設資料庫</div>
-              <input id="aw_dbid" class="settings-input" type="text"
-                placeholder="default（可選填）"
-                value="${cfg.databaseId || ''}" />
+              <label class="settings-label">Table by name（資料表名稱）</label>
+              <div class="settings-hint">依名稱指定 Appwrite Collection（如 music、notes）</div>
+              <input id="aw_table" class="settings-input" type="text"
+                placeholder="例如：music、notes、docs"
+                value="${cfg.tableName || ''}" />
             </div>
           </div>
 
@@ -913,7 +913,7 @@
                 endpoint: panel.querySelector('#aw_endpoint').value.trim().replace(/\/$/, ''),
                 projectId: panel.querySelector('#aw_project').value.trim(),
                 apiKey: panel.querySelector('#aw_apikey').value.trim(),
-                databaseId: panel.querySelector('#aw_dbid').value.trim(),
+                tableName: panel.querySelector('#aw_table').value.trim(),
             });
 
             function showToast(type, msg) {
@@ -977,7 +977,7 @@
             clearBtn.addEventListener('click', () => {
                 if (!confirm('確定要清除所有 Appwrite 設定嗎？')) return;
                 localStorage.removeItem(APPWRITE_KEY);
-                ['#aw_endpoint', '#aw_project', '#aw_apikey', '#aw_dbid'].forEach(s => {
+                ['#aw_endpoint', '#aw_project', '#aw_apikey', '#aw_table'].forEach(s => {
                     panel.querySelector(s).value = '';
                 });
                 setBadge('disconnected', '未設定');
