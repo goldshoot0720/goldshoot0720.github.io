@@ -1398,6 +1398,332 @@
             });
         }
 
+        /* ══════════════════════════════════════════
+           Appwrite REST Helper
+        ══════════════════════════════════════════ */
+        let _awDbId = null;
+
+        async function awFetch(path, options = {}) {
+            const cfg = getAppwriteConfig();
+            if (!cfg.endpoint || !cfg.projectId)
+                throw new Error('尚未設定 Appwrite 端點，請前往「設定」頁面');
+            const { headers: extraHeaders, ...rest } = options;
+            const res = await fetch(`${cfg.endpoint}${path}`, {
+                ...rest,
+                headers: {
+                    'X-Appwrite-Project': cfg.projectId,
+                    'X-Appwrite-Key': cfg.apiKey || '',
+                    'Content-Type': 'application/json',
+                    ...(extraHeaders || {}),
+                },
+                signal: rest.signal || AbortSignal.timeout(15000),
+            });
+            if (res.status === 204) return null;
+            const json = await res.json();
+            if (!res.ok) throw new Error(json.message || `HTTP ${res.status}`);
+            return json;
+        }
+
+        async function awGetDbId() {
+            if (_awDbId) return _awDbId;
+            const data = await awFetch('/databases?limit=25');
+            if (!data?.databases?.length)
+                throw new Error('找不到任何資料庫，請確認 Appwrite 設定');
+            _awDbId = data.databases[0].$id;
+            return _awDbId;
+        }
+
+        /* ══════════════════════════════════════════
+           Subscribe CRUD
+        ══════════════════════════════════════════ */
+        async function fetchSubs() {
+            const db = await awGetDbId();
+            const data = await awFetch(`/databases/${db}/collections/subscription/documents?limit=100`);
+            return data?.documents ?? [];
+        }
+
+        async function saveSub(formData, docId = null) {
+            const db = await awGetDbId();
+            if (docId) {
+                return awFetch(`/databases/${db}/collections/subscription/documents/${docId}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ data: formData }),
+                });
+            }
+            return awFetch(`/databases/${db}/collections/subscription/documents`, {
+                method: 'POST',
+                body: JSON.stringify({ documentId: 'unique()', data: formData }),
+            });
+        }
+
+        async function deleteSub(docId) {
+            const db = await awGetDbId();
+            return awFetch(`/databases/${db}/collections/subscription/documents/${docId}`, { method: 'DELETE' });
+        }
+
+        /* ══════════════════════════════════════════
+           Subscribe Page — Helpers
+        ══════════════════════════════════════════ */
+        function fmtDate(val) {
+            if (!val) return '—';
+            try { return new Date(val).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }); }
+            catch { return val; }
+        }
+
+        function fmtPrice(price, currency) {
+            if (price == null || price === '') return '—';
+            const sym = { TWD: 'NT$', USD: '$', JPY: '¥', EUR: '€', GBP: '£', HKD: 'HK$', CNY: '¥', SGD: 'S$' };
+            return (sym[currency] || (currency ? currency + ' ' : '')) + Number(price).toLocaleString();
+        }
+
+        function daysUntil(dateStr) {
+            if (!dateStr) return null;
+            return Math.ceil((new Date(dateStr) - Date.now()) / 86400000);
+        }
+
+        /* ── Subscribe Page — Render ── */
+        function renderSubscribePage() {
+            const wrap = document.createElement('div');
+            wrap.className = 'page-panel subscribe-page';
+            wrap.innerHTML = `
+                <div class="page-toolbar">
+                    <span class="page-toolbar-title">📬 訂閱清單</span>
+                    <span class="page-toolbar-count" id="subCount">—</span>
+                    <button class="btn btn-primary" id="subAddBtn" style="margin-left:auto">＋ 新增訂閱</button>
+                </div>
+                <div class="page-body" id="subBody">
+                    <div class="spinner-wrap"><div class="spinner"></div><span>載入中…</span></div>
+                </div>
+
+                <!-- Add/Edit Modal -->
+                <div class="modal-overlay" id="subModal" style="display:none">
+                    <div class="modal" style="max-width:560px">
+                        <div class="modal-header">
+                            <span class="modal-title" id="subModalTitle">新增訂閱</span>
+                            <div class="modal-close" id="subModalClose">✕</div>
+                        </div>
+                        <div class="modal-body">
+                            <div id="subModalErr" style="display:none" class="settings-toast error"></div>
+                            <div class="form-row">
+                                <div class="form-field full">
+                                    <label class="form-label">名稱 <span class="required">*</span></label>
+                                    <input id="sf_name" class="form-input" type="text" placeholder="服務名稱" maxlength="100" />
+                                </div>
+                                <div class="form-field full">
+                                    <label class="form-label">網站</label>
+                                    <input id="sf_site" class="form-input" type="url" placeholder="https://example.com" />
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">金額</label>
+                                    <input id="sf_price" class="form-input" type="number" placeholder="0" min="0" />
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">貨幣</label>
+                                    <select id="sf_currency" class="form-select">
+                                        <option value="TWD">TWD 台幣</option>
+                                        <option value="USD">USD 美元</option>
+                                        <option value="JPY">JPY 日圓</option>
+                                        <option value="EUR">EUR 歐元</option>
+                                        <option value="GBP">GBP 英鎊</option>
+                                        <option value="HKD">HKD 港幣</option>
+                                        <option value="CNY">CNY 人民幣</option>
+                                        <option value="SGD">SGD 新幣</option>
+                                    </select>
+                                </div>
+                                <div class="form-field full">
+                                    <label class="form-label">下次扣款日</label>
+                                    <input id="sf_nextdate" class="form-input" type="date" />
+                                </div>
+                                <div class="form-field full">
+                                    <label class="form-label">帳號</label>
+                                    <input id="sf_account" class="form-input" type="text" placeholder="登入帳號或 Email" maxlength="100" />
+                                </div>
+                                <div class="form-field full">
+                                    <label class="form-label">備註</label>
+                                    <input id="sf_note" class="form-input" type="text" placeholder="備註說明" maxlength="100" />
+                                </div>
+                                <div class="form-field full">
+                                    <div class="form-checkbox-row">
+                                        <input id="sf_continue" class="form-checkbox" type="checkbox" checked />
+                                        <label class="form-label" for="sf_continue" style="text-transform:none;font-size:13px">持續訂閱中</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" id="subSaveBtn">💾 儲存</button>
+                            <button class="btn btn-ghost" id="subCancelBtn">取消</button>
+                        </div>
+                    </div>
+                </div>`;
+            return wrap;
+        }
+
+        function buildSubTable(docs) {
+            if (!docs.length) {
+                return `<div class="empty-state">
+                    <div class="empty-state-icon">📭</div>
+                    <div>尚無訂閱記錄，點右上角「＋ 新增訂閱」開始使用</div>
+                </div>`;
+            }
+            const rows = docs.map(d => {
+                const days = daysUntil(d.nextdate);
+                const dayBadge = days == null ? '' :
+                    days < 0 ? `<br><span style="color:#fc8b4a;font-size:10px">已過期 ${Math.abs(days)} 天</span>` :
+                        days <= 7 ? `<br><span style="color:#f6e05e;font-size:10px">${days} 天後</span>` :
+                            `<br><span style="color:var(--text-muted);font-size:10px">${days} 天後</span>`;
+                const siteLnk = d.site
+                    ? `<a href="${d.site}" target="_blank" rel="noopener" class="td-link">🔗 前往</a>`
+                    : '—';
+                return `<tr>
+                    <td class="td-name">${d.name || '—'}</td>
+                    <td>${siteLnk}</td>
+                    <td class="td-price">${fmtPrice(d.price, d.currency)}</td>
+                    <td>${fmtDate(d.nextdate)}${dayBadge}</td>
+                    <td>${d.account || '—'}</td>
+                    <td>${d.note || '—'}</td>
+                    <td><span class="status-badge ${d.continue !== false ? 'on' : 'off'}">${d.continue !== false ? '✓ 訂閱中' : '✗ 已停止'}</span></td>
+                    <td>
+                        <div class="td-actions">
+                            <div class="icon-btn sub-edit-btn" data-id="${d.$id}" title="編輯">✏️</div>
+                            <div class="icon-btn danger sub-del-btn" data-id="${d.$id}" data-name="${d.name}" title="刪除">🗑️</div>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+            return `<div class="data-table-wrap">
+                <table class="data-table">
+                    <thead><tr>
+                        <th>名稱</th><th>網站</th><th>金額</th><th>下次扣款</th>
+                        <th>帳號</th><th>備註</th><th>狀態</th><th>操作</th>
+                    </tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>`;
+        }
+
+        function bindSubscribeEvents(page) {
+            let docs = [];
+            let editingId = null;
+
+            const body = page.querySelector('#subBody');
+            const countEl = page.querySelector('#subCount');
+            const modal = page.querySelector('#subModal');
+            const modalTitle = page.querySelector('#subModalTitle');
+            const modalErr = page.querySelector('#subModalErr');
+            const saveBtn = page.querySelector('#subSaveBtn');
+            const cancelBtn = page.querySelector('#subCancelBtn');
+
+            const getForm = () => ({
+                name: page.querySelector('#sf_name').value.trim(),
+                site: page.querySelector('#sf_site').value.trim() || null,
+                price: parseInt(page.querySelector('#sf_price').value) || 0,
+                currency: page.querySelector('#sf_currency').value,
+                nextdate: page.querySelector('#sf_nextdate').value
+                    ? new Date(page.querySelector('#sf_nextdate').value).toISOString() : null,
+                account: page.querySelector('#sf_account').value.trim() || null,
+                note: page.querySelector('#sf_note').value.trim() || null,
+                continue: page.querySelector('#sf_continue').checked,
+            });
+
+            const fillForm = (d = {}) => {
+                page.querySelector('#sf_name').value = d.name || '';
+                page.querySelector('#sf_site').value = d.site || '';
+                page.querySelector('#sf_price').value = d.price ?? '';
+                page.querySelector('#sf_currency').value = d.currency || 'TWD';
+                page.querySelector('#sf_nextdate').value = d.nextdate ? d.nextdate.slice(0, 10) : '';
+                page.querySelector('#sf_account').value = d.account || '';
+                page.querySelector('#sf_note').value = d.note || '';
+                page.querySelector('#sf_continue').checked = d.continue !== false;
+            };
+
+            const openModal = (doc = null) => {
+                editingId = doc ? doc.$id : null;
+                modalTitle.textContent = doc ? '編輯訂閱' : '新增訂閱';
+                fillForm(doc || {});
+                modalErr.style.display = 'none';
+                modal.style.display = 'flex';
+                page.querySelector('#sf_name').focus();
+            };
+
+            const closeModal = () => { modal.style.display = 'none'; editingId = null; };
+
+            async function loadData() {
+                body.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div><span>載入中…</span></div>';
+                try {
+                    docs = await fetchSubs();
+                    countEl.textContent = `${docs.length} 筆`;
+                    body.innerHTML = buildSubTable(docs);
+                    bindTableEvents();
+                } catch (e) {
+                    body.innerHTML = `<div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <div style="color:#fc8b4a">${e.message}</div>
+                    </div>`;
+                }
+            }
+
+            function bindTableEvents() {
+                body.querySelectorAll('.sub-edit-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const doc = docs.find(d => d.$id === btn.dataset.id);
+                        if (doc) openModal(doc);
+                    });
+                });
+                body.querySelectorAll('.sub-del-btn').forEach(btn => {
+                    btn.addEventListener('click', async () => {
+                        if (!confirm(`確定刪除「${btn.dataset.name}」嗎？`)) return;
+                        btn.textContent = '⏳';
+                        try {
+                            await deleteSub(btn.dataset.id);
+                            await loadData();
+                        } catch (e) {
+                            alert('刪除失敗：' + e.message);
+                            btn.textContent = '🗑️';
+                        }
+                    });
+                });
+            }
+
+            // wire up modal controls
+            page.querySelector('#subAddBtn').addEventListener('click', () => openModal());
+            page.querySelector('#subModalClose').addEventListener('click', closeModal);
+            cancelBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
+
+            // save button
+            saveBtn.addEventListener('click', async () => {
+                const fd = getForm();
+                if (!fd.name) {
+                    modalErr.textContent = '⚠️ 名稱為必填欄位';
+                    modalErr.style.display = 'flex';
+                    return;
+                }
+                modalErr.style.display = 'none';
+                saveBtn.disabled = true;
+                saveBtn.textContent = '⏳ 儲存中…';
+                try {
+                    await saveSub(fd, editingId);
+                    closeModal();
+                    await loadData();
+                } catch (e) {
+                    modalErr.textContent = '❌ ' + e.message;
+                    modalErr.style.display = 'flex';
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = '💾 儲存';
+                }
+            });
+
+            // keyboard ESC closes modal
+            document.addEventListener('keydown', function escHandler(e) {
+                if (e.key === 'Escape' && modal.style.display !== 'none') closeModal();
+                if (!page.isConnected) document.removeEventListener('keydown', escHandler);
+            });
+
+            loadData();
+        }
+
         /* ── Navigation ── */
         const contentArea = document.getElementById('contentArea');
         const defaultPlaceholder = document.getElementById('defaultPlaceholder');
@@ -1413,15 +1739,22 @@
             topbarBadge.textContent = item.badge;
 
             // clear previous panel
-            const old = contentArea.querySelector('.settings-panel');
-            if (old) old.remove();
+            contentArea.querySelectorAll('.settings-panel, .page-panel').forEach(el => el.remove());
 
             if (id === 'settings') {
                 defaultPlaceholder.style.display = 'none';
+                contentArea.classList.remove('full-page');
                 const panel = renderSettings();
                 contentArea.appendChild(panel);
                 bindSettingsEvents(panel);
+            } else if (id === 'subscribe') {
+                defaultPlaceholder.style.display = 'none';
+                contentArea.classList.add('full-page');
+                const page = renderSubscribePage();
+                contentArea.appendChild(page);
+                bindSubscribeEvents(page);
             } else {
+                contentArea.classList.remove('full-page');
                 defaultPlaceholder.style.display = '';
                 document.getElementById('placeholderIcon').textContent = item.icon;
                 document.getElementById('placeholderText').textContent = `${item.label} — 內容尚待建置`;
