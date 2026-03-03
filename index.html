@@ -1524,7 +1524,10 @@
                 <div class="page-toolbar">
                     <span class="page-toolbar-title">📬 訂閱清單</span>
                     <span class="page-toolbar-count" id="subCount">—</span>
-                    <button class="btn btn-primary" id="subAddBtn" style="margin-left:auto">＋ 新增訂閱</button>
+                    <button class="btn btn-ghost" id="subExportBtn" style="margin-left:auto">⬇️ 匯出 CSV</button>
+                    <button class="btn btn-ghost" id="subImportBtn">⬆️ 匯入 CSV</button>
+                    <input type="file" id="subImportFile" accept=".csv" style="display:none" />
+                    <button class="btn btn-primary" id="subAddBtn">＋ 新增訂閱</button>
                 </div>
                 <div class="page-body" id="subBody">
                     <div class="spinner-wrap"><div class="spinner"></div><span>載入中…</span></div>
@@ -1753,6 +1756,92 @@
             document.addEventListener('keydown', function escHandler(e) {
                 if (e.key === 'Escape' && modal.style.display !== 'none') closeModal();
                 if (!page.isConnected) document.removeEventListener('keydown', escHandler);
+            });
+
+            /* ── CSV Export ── */
+            const CSV_COLS = ['name', 'site', 'price', 'currency', 'nextdate', 'account', 'note', 'continue'];
+            const CSV_HEADER = '名稱,網站,金額,貨幣,下次扣款日,帳號,備註,持續訂閱';
+
+            page.querySelector('#subExportBtn').addEventListener('click', () => {
+                if (!docs.length) { alert('目前沒有資料可匯出'); return; }
+                const escape = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+                const rows = docs.map(d => [
+                    escape(d.name),
+                    escape(d.site ?? ''),
+                    d.price ?? 0,
+                    escape(d.currency ?? 'TWD'),
+                    d.nextdate ? d.nextdate.slice(0, 10) : '',
+                    escape(d.account ?? ''),
+                    escape(d.note ?? ''),
+                    d.continue !== false ? 'true' : 'false',
+                ].join(','));
+                const bom = '\uFEFF'; // UTF-8 BOM for Excel
+                const csv = bom + CSV_HEADER + '\n' + rows.join('\n');
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+                a.download = `subscription_${new Date().toISOString().slice(0, 10)}.csv`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+            });
+
+            /* ── CSV Import ── */
+            const fileInput = page.querySelector('#subImportFile');
+            page.querySelector('#subImportBtn').addEventListener('click', () => fileInput.click());
+
+            fileInput.addEventListener('change', async () => {
+                const file = fileInput.files[0];
+                if (!file) return;
+                fileInput.value = '';
+                const text = await file.text();
+                const lines = text.replace(/\r/g, '').split('\n').filter(l => l.trim());
+                if (lines.length < 2) { alert('沒有資料列（至少需要標題列和一筆資料）'); return; }
+
+                // Parse header to map column index
+                const parseRow = raw => {
+                    const result = [];
+                    let cur = '', inQ = false;
+                    for (const ch of raw) {
+                        if (ch === '"') { inQ = !inQ; continue; }
+                        if (ch === ',' && !inQ) { result.push(cur); cur = ''; continue; }
+                        cur += ch;
+                    }
+                    result.push(cur);
+                    return result;
+                };
+
+                const hdrs = parseRow(lines[0].replace(/^\uFEFF/, '')).map(h => h.trim().toLowerCase());
+                const idx = k => hdrs.findIndex(h => h === k || h === { name: '名稱', site: '網站', price: '金額', currency: '貨幣', nextdate: '下次扣款日', account: '帳號', note: '備註', continue: '持續訂閱' }[k]);
+                const get = (cells, k) => { const i = idx(k); return i >= 0 ? cells[i]?.trim() : ''; };
+
+                const dataRows = lines.slice(1);
+                let ok = 0, fail = 0;
+                const importBtn = page.querySelector('#subImportBtn');
+                importBtn.disabled = true;
+                importBtn.textContent = `⏳ 0/${dataRows.length}`;
+
+                for (let i = 0; i < dataRows.length; i++) {
+                    const cells = parseRow(dataRows[i]);
+                    const name = get(cells, 'name');
+                    if (!name) { fail++; continue; }
+                    const fd = {
+                        name,
+                        site: get(cells, 'site') || null,
+                        price: parseInt(get(cells, 'price')) || 0,
+                        currency: get(cells, 'currency') || 'TWD',
+                        nextdate: get(cells, 'nextdate') ? new Date(get(cells, 'nextdate')).toISOString() : null,
+                        account: get(cells, 'account') || null,
+                        note: get(cells, 'note') || null,
+                        continue: get(cells, 'continue') !== 'false',
+                    };
+                    try { await saveSub(fd); ok++; }
+                    catch { fail++; }
+                    importBtn.textContent = `⏳ ${i + 1}/${dataRows.length}`;
+                }
+
+                importBtn.disabled = false;
+                importBtn.textContent = '⬆️ 匯入 CSV';
+                alert(`匯入完成！成功 ${ok} 筆，失敗 ${fail} 筆`);
+                await loadData();
             });
 
             loadData();
