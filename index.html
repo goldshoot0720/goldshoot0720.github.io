@@ -1468,11 +1468,17 @@
         /* ══════════════════════════════════════════
            Subscribe CRUD
         ══════════════════════════════════════════ */
-        async function fetchSubs() {
+        const PAGE_SIZE = 5000;
+
+        async function fetchSubs(offset = 0) {
             const db = await awGetDbId();
             const col = await awGetSubColId();
-            const data = await awFetch(`/databases/${db}/collections/${col}/documents?limit=100`);
-            return data?.documents ?? [];
+            const q = [
+                `queries[]=${encodeURIComponent(JSON.stringify({ method: 'limit', values: [PAGE_SIZE] }))}`,
+                `queries[]=${encodeURIComponent(JSON.stringify({ method: 'offset', values: [offset] }))}`,
+            ].join('&');
+            const data = await awFetch(`/databases/${db}/collections/${col}/documents?${q}`);
+            return { documents: data?.documents ?? [], total: data?.total ?? 0 };
         }
 
         async function saveSub(formData, docId = null) {
@@ -1526,6 +1532,9 @@
                     <span class="page-toolbar-count" id="subCount">—</span>
                     <span style="flex:1"></span>
                     <button class="btn btn-danger" id="subBulkDelBtn" style="display:none">🗑️ 刪除所選</button>
+                    <button class="btn btn-ghost" id="subPrevBtn" disabled>◀ 上一頁</button>
+                    <span id="subPageInfo" style="font-size:12px;color:var(--text-muted);padding:0 6px;white-space:nowrap">-</span>
+                    <button class="btn btn-ghost" id="subNextBtn" disabled>下一頁 ▶</button>
                     <button class="btn btn-ghost" id="subExportBtn">⬇️ 匯出 CSV</button>
                     <button class="btn btn-ghost" id="subImportBtn">⬆️ 匯入 CSV</button>
                     <input type="file" id="subImportFile" accept=".csv" style="display:none" />
@@ -1711,11 +1720,31 @@
 
             const closeModal = () => { modal.style.display = 'none'; editingId = null; };
 
+            let currentOffset = 0;
+            let totalDocs = 0;
+
+            const prevBtn = page.querySelector('#subPrevBtn');
+            const nextBtn = page.querySelector('#subNextBtn');
+            const pageInfoEl = page.querySelector('#subPageInfo');
+
+            function updatePageControls() {
+                const totalPages = Math.max(1, Math.ceil(totalDocs / PAGE_SIZE));
+                const curPage = Math.floor(currentOffset / PAGE_SIZE) + 1;
+                const from = currentOffset + 1;
+                const to = Math.min(currentOffset + PAGE_SIZE, totalDocs);
+                pageInfoEl.textContent = totalDocs > 0 ? `第 ${curPage} / ${totalPages} 頁` : '第 1 / 1 頁';
+                prevBtn.disabled = currentOffset === 0;
+                nextBtn.disabled = currentOffset + PAGE_SIZE >= totalDocs;
+            }
+
             async function loadData() {
                 body.innerHTML = '<div class="spinner-wrap"><div class="spinner"></div><span>載入中…</span></div>';
                 try {
-                    docs = await fetchSubs();
-                    countEl.textContent = `${docs.length} 筆`;
+                    const result = await fetchSubs(currentOffset);
+                    docs = result.documents;
+                    totalDocs = result.total;
+                    countEl.textContent = `${totalDocs} 筆`;
+                    updatePageControls();
                     body.innerHTML = buildSubTable(docs);
                     bindTableEvents();
                 } catch (e) {
@@ -1725,6 +1754,17 @@
                     </div>`;
                 }
             }
+
+            prevBtn.addEventListener('click', async () => {
+                if (currentOffset === 0) return;
+                currentOffset = Math.max(0, currentOffset - PAGE_SIZE);
+                await loadData();
+            });
+            nextBtn.addEventListener('click', async () => {
+                if (currentOffset + PAGE_SIZE >= totalDocs) return;
+                currentOffset += PAGE_SIZE;
+                await loadData();
+            });
 
             function bindTableEvents() {
                 body.querySelectorAll('.sub-edit-btn').forEach(btn => {
