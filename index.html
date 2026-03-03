@@ -1443,24 +1443,48 @@
             return _awDbId;
         }
 
+        /* 自動搜尋 subscription Collection ID（依名稱或 ID 匹配） */
+        let _subColId = null;
+        async function awGetSubColId() {
+            if (_subColId) return _subColId;
+            const db = await awGetDbId();
+            // 嘗試直接用 'subscription' 作為 ID
+            try {
+                await awFetch(`/databases/${db}/collections/subscription`);
+                _subColId = 'subscription';
+                return _subColId;
+            } catch { }
+            // 找不到，列下所有 Collection 依名稱搜尋
+            const list = await awFetch(`/databases/${db}/collections?limit=100`);
+            const col = list?.collections?.find(c =>
+                c.name?.toLowerCase() === 'subscription' ||
+                c.$id?.toLowerCase() === 'subscription'
+            );
+            if (!col) throw new Error('找不到訂閱資料表，請在 Appwrite 建立名稱為「subscription」的 Collection');
+            _subColId = col.$id;
+            return _subColId;
+        }
+
         /* ══════════════════════════════════════════
            Subscribe CRUD
         ══════════════════════════════════════════ */
         async function fetchSubs() {
             const db = await awGetDbId();
-            const data = await awFetch(`/databases/${db}/collections/subscription/documents?limit=100`);
+            const col = await awGetSubColId();
+            const data = await awFetch(`/databases/${db}/collections/${col}/documents?limit=100`);
             return data?.documents ?? [];
         }
 
         async function saveSub(formData, docId = null) {
             const db = await awGetDbId();
+            const col = await awGetSubColId();
             if (docId) {
-                return awFetch(`/databases/${db}/collections/subscription/documents/${docId}`, {
+                return awFetch(`/databases/${db}/collections/${col}/documents/${docId}`, {
                     method: 'PATCH',
                     body: JSON.stringify({ data: formData }),
                 });
             }
-            return awFetch(`/databases/${db}/collections/subscription/documents`, {
+            return awFetch(`/databases/${db}/collections/${col}/documents`, {
                 method: 'POST',
                 body: JSON.stringify({ documentId: 'unique()', data: formData }),
             });
@@ -1468,7 +1492,8 @@
 
         async function deleteSub(docId) {
             const db = await awGetDbId();
-            return awFetch(`/databases/${db}/collections/subscription/documents/${docId}`, { method: 'DELETE' });
+            const col = await awGetSubColId();
+            return awFetch(`/databases/${db}/collections/${col}/documents/${docId}`, { method: 'DELETE' });
         }
 
         /* ══════════════════════════════════════════
