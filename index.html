@@ -1607,12 +1607,11 @@
                     days < 0 ? `<br><span style="color:#fc8b4a;font-size:10px">已過期 ${Math.abs(days)} 天</span>` :
                         days <= 7 ? `<br><span style="color:#f6e05e;font-size:10px">${days} 天後</span>` :
                             `<br><span style="color:var(--text-muted);font-size:10px">${days} 天後</span>`;
-                const siteLnk = d.site
-                    ? `<a href="${d.site}" target="_blank" rel="noopener" class="td-link">🔗 前往</a>`
-                    : '—';
+                const nameCell = d.site
+                    ? `<a href="${d.site}" target="_blank" rel="noopener" class="td-link" style="color:var(--text-primary);font-weight:500">${d.name || '—'}</a><br><span style="font-size:10px;color:var(--text-muted)">${d.site}</span>`
+                    : `${d.name || '—'}`;
                 return `<tr>
-                    <td class="td-name">${d.name || '—'}</td>
-                    <td>${siteLnk}</td>
+                    <td class="td-name">${nameCell}</td>
                     <td class="td-price">${fmtPrice(d.price, d.currency)}</td>
                     <td>${fmtDate(d.nextdate)}${dayBadge}</td>
                     <td>${d.account || '—'}</td>
@@ -1629,7 +1628,7 @@
             return `<div class="data-table-wrap">
                 <table class="data-table">
                     <thead><tr>
-                        <th>名稱</th><th>網站</th><th>金額</th><th>下次扣款</th>
+                        <th>名稱</th><th>金額</th><th>下次扣款</th>
                         <th>帳號</th><th>備註</th><th>狀態</th><th>操作</th>
                     </tr></thead>
                     <tbody>${rows}</tbody>
