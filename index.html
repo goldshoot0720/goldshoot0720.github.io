@@ -1725,10 +1725,10 @@
         <!-- Appwrite 設定區塊 -->
         <div class="settings-section" id="awSection" style="${isConfigProvider ? '' : 'display:none'}">
           <div class="settings-section-header">
-            <div class="settings-section-icon">☁️</div>
+            <div class="settings-section-icon" id="providerIcon">${selectedProvider === 'supabase' ? '🟢' : '☁️'}</div>
             <div>
-              <div class="settings-section-title">Appwrite 連線設定</div>
-              <div class="settings-section-sub">Backend as a Service — 資料庫與儲存空間</div>
+              <div class="settings-section-title" id="providerTitle">${selectedProvider === 'supabase' ? 'Supabase 連線設定' : 'Appwrite 連線設定'}</div>
+              <div class="settings-section-sub" id="providerSub">${selectedProvider === 'supabase' ? 'Supabase Platform — Database / Auth / Storage' : 'Backend as a Service — 資料庫與儲存空間'}</div>
             </div>
             <span class="settings-conn-badge ${hasConfig ? 'connected' : 'disconnected'}" id="connBadge">
               ${hasConfig ? '✓ 已設定' : '未設定'}
@@ -1806,6 +1806,9 @@
             const projectInput = panel.querySelector('#aw_project');
             const endpointInput = panel.querySelector('#aw_endpoint');
             const apiKeyInput = panel.querySelector('#aw_apikey');
+            const providerIcon = panel.querySelector('#providerIcon');
+            const providerTitle = panel.querySelector('#providerTitle');
+            const providerSub = panel.querySelector('#providerSub');
             const projectLabel = projectInput?.closest('.settings-field')?.querySelector('.settings-label');
             const apiKeyLabel = apiKeyInput?.closest('.settings-field')?.querySelector('.settings-label');
             const endpointField = panel.querySelector('#endpointField');
@@ -1850,6 +1853,11 @@
 
             function updateProviderFields(providerId) {
                 const isSupabase = providerId === 'supabase';
+                if (providerIcon) providerIcon.textContent = isSupabase ? '🟢' : '☁️';
+                if (providerTitle) providerTitle.textContent = isSupabase ? 'Supabase 連線設定' : 'Appwrite 連線設定';
+                if (providerSub) providerSub.textContent = isSupabase
+                    ? 'Supabase Platform — Database / Auth / Storage'
+                    : 'Backend as a Service — 資料庫與儲存空間';
                 if (projectLabel) projectLabel.textContent = 'Project ID';
                 if (apiKeyLabel) apiKeyLabel.textContent = isSupabase ? 'SUPABASE_ANON_KEY' : 'API Key';
                 if (endpointField) endpointField.style.display = isSupabase ? 'none' : '';
