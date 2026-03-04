@@ -2180,6 +2180,8 @@
 
         async function awFetch(path, options = {}) {
             const cfg = getAppwriteConfig();
+            if ((cfg.provider || 'appwrite') !== 'appwrite')
+                throw new Error('Current provider is Supabase. Appwrite API calls are disabled.');
             if (!cfg.endpoint || !cfg.projectId)
                 throw new Error('尚未設定 Appwrite 端點，請前往「設定」頁面');
             const { headers: extraHeaders, ...rest } = options;
