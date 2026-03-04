@@ -578,6 +578,13 @@
             font-variant-numeric: tabular-nums;
         }
 
+        .data-table .td-note {
+            white-space: pre-line;
+            word-break: break-word;
+            min-width: 180px;
+            max-width: 360px;
+        }
+
         .status-badge {
             display: inline-flex;
             align-items: center;
@@ -2480,7 +2487,7 @@
                                 </div>
                                 <div class="form-field full">
                                     <label class="form-label">備註</label>
-                                    <input id="sf_note" class="form-input" type="text" placeholder="備註說明" maxlength="100" />
+                                    <textarea id="sf_note" class="form-input" placeholder="備註說明" maxlength="100" rows="3"></textarea>
                                 </div>
                                 <div class="form-field full">
                                     <div class="form-checkbox-row">
@@ -2543,7 +2550,7 @@
                     <td class="td-price">${fmtPrice(d.price, d.currency)}</td>
                     <td>${fmtDate(d.nextdate)}${dayBadge}</td>
                     <td>${d.account || '—'}</td>
-                    <td>${d.note || '—'}</td>
+                    <td class="td-note">${d.note || '—'}</td>
                     <td><span class="status-badge ${d.continue !== false ? 'on' : 'off'}">${d.continue !== false ? '✓ 訂閱中' : '✗ 已停止'}</span></td>
                     <td>
                         <div class="td-actions">
