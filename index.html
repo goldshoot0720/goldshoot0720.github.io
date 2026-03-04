@@ -1538,7 +1538,8 @@
                 const legacy = JSON.parse(localStorage.getItem(APPWRITE_KEY) || '{}');
                 const nick = legacy.nickname || 'default';
                 const id = _newId();
-                const migrated = [{ id, name: `Appwrite-${nick}`, provider: 'appwrite', ...legacy }];
+                const defaultName = nick === 'default' ? 'default' : `Appwrite-${nick}`;
+                const migrated = [{ id, name: defaultName, provider: 'appwrite', ...legacy }];
                 localStorage.setItem(PROFILES_KEY, JSON.stringify(migrated));
                 localStorage.setItem(ACTIVE_KEY, id);
                 return migrated;
@@ -1584,7 +1585,7 @@
             {
                 cat: 'PaaS 系列', items: [
                     { id: 'appwrite', icon: '☁️', name: 'Appwrite', done: true },
-                    { id: 'supabase', icon: '🟢', name: 'Supabase', done: false },
+                    { id: 'supabase', icon: '🟢', name: 'Supabase', done: true },
                     { id: 'nhost', icon: '🔷', name: 'Nhost', done: false },
                     { id: 'sanity', icon: '🎯', name: 'Sanity', done: false },
                     { id: 'contentful', icon: '📦', name: 'Contentful', done: false },
@@ -1635,7 +1636,7 @@
                     </div>
                 </div>`).join('');
 
-            const isAppwrite = selectedProvider === 'appwrite';
+            const isConfigProvider = selectedProvider === 'appwrite' || selectedProvider === 'supabase';
             const selectedName = PROVIDERS.flatMap(c => c.items).find(p => p.id === selectedProvider)?.name || selectedProvider;
 
             /* Build profile tabs HTML */
@@ -1672,7 +1673,7 @@
         </div>
 
         <!-- Appwrite 設定區塊 -->
-        <div class="settings-section" id="awSection" style="${isAppwrite ? '' : 'display:none'}">
+        <div class="settings-section" id="awSection" style="${isConfigProvider ? '' : 'display:none'}">
           <div class="settings-section-header">
             <div class="settings-section-icon">☁️</div>
             <div>
@@ -1727,7 +1728,7 @@
         </div>
 
         <!-- WIP notice (shown when a non-implemented provider is selected) -->
-        <div class="settings-section" id="wipSection" style="${isAppwrite ? 'display:none' : ''}">
+        <div class="settings-section" id="wipSection" style="${isConfigProvider ? 'display:none' : ''}">
           <div class="provider-wip-notice">
             <div class="wip-big">🚧</div>
             <div class="wip-title" id="wipTitle">${selectedName} 尚未實作</div>
@@ -1767,7 +1768,7 @@
                 panel.querySelectorAll('.provider-card').forEach(c =>
                     c.classList.toggle('active', c.dataset.provider === prov));
                 currentProvider = prov;
-                if (prov === 'appwrite') {
+                if (prov === 'appwrite' || prov === 'supabase') {
                     awSection.style.display = '';
                     wipSection.style.display = 'none';
                 } else {
@@ -1938,7 +1939,7 @@
                 panel.querySelectorAll('.provider-card').forEach(card =>
                     card.classList.toggle('active', card.dataset.provider === id));
                 const info = allProviders.find(p => p.id === id);
-                if (id === 'appwrite') {
+                if (id === 'appwrite' || id === 'supabase') {
                     awSection.style.display = '';
                     wipSection.style.display = 'none';
                 } else {
@@ -1999,7 +2000,7 @@
                 const profiles = loadProfiles();
                 const activeId = getActiveId();
                 const prof = profiles.find(p => p.id === activeId);
-                if (prof && (prof.name.startsWith('新設定檔') || prof.name === 'Appwrite-default')) {
+                if (prof && (prof.name.startsWith('新設定檔') || prof.name === 'default' || prof.name === 'Appwrite-default')) {
                     const provName = allProviders.find(p => p.id === currentProvider)?.name || currentProvider;
                     prof.name = `${provName}-${fields.nickname || 'user'}`;
                     saveProfiles(profiles);
@@ -2020,13 +2021,16 @@
                 setBadge('testing', '⏳ 測試中…');
                 testBtn.disabled = true;
                 try {
-                    const res = await fetch(`${fields.endpoint}/locale`, {
+                    const isSupabase = currentProvider === 'supabase';
+                    const res = await fetch(isSupabase ? `${fields.endpoint}/rest/v1/` : `${fields.endpoint}/locale`, {
                         signal: AbortSignal.timeout(8000),
-                        headers: { 'X-Appwrite-Project': fields.projectId, 'Content-Type': 'application/json' },
+                        headers: isSupabase
+                            ? { apikey: fields.apiKey || '', Authorization: `Bearer ${fields.apiKey || ''}` }
+                            : { 'X-Appwrite-Project': fields.projectId, 'Content-Type': 'application/json' },
                     });
                     if (res.status < 500) {
                         setBadge('connected', '✓ 連線成功');
-                        showToast('success', `✅ 連線成功！Appwrite 端點回應 HTTP ${res.status}`);
+                        showToast('success', `✅ 連線成功！${isSupabase ? 'Supabase' : 'Appwrite'} 端點回應 HTTP ${res.status}`);
                     } else {
                         setBadge('disconnected', '✗ 伺服器錯誤');
                         showToast('error', `⚠️ 伺服器回應 HTTP ${res.status}，請確認 Endpoint 是否正確`);
