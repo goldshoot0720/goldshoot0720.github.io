@@ -2201,6 +2201,40 @@
             return json;
         }
 
+        function sbBaseEndpoint() {
+            const cfg = getAppwriteConfig();
+            return (cfg.endpoint || '').replace(/\/$/, '');
+        }
+
+        function sbHeaders(extra = {}) {
+            const cfg = getAppwriteConfig();
+            if ((cfg.provider || 'appwrite') !== 'supabase')
+                throw new Error('Current provider is Appwrite. Supabase API calls are disabled.');
+            if (!cfg.endpoint || !cfg.apiKey)
+                throw new Error('Supabase endpoint or anon key is missing.');
+            return Object.assign({
+                apikey: cfg.apiKey,
+                Authorization: `Bearer ${cfg.apiKey}`,
+                'Content-Type': 'application/json',
+            }, extra);
+        }
+
+        function mapSbRowToDoc(r) {
+            return {
+                $id: String(r.id),
+                name: r.name ?? '',
+                site: r.site ?? null,
+                account: r.account ?? null,
+                price: r.price ?? 0,
+                nextdate: r.nextdate ?? null,
+                note: r.note ?? null,
+                continue: r.iscontinue !== false,
+                currency: r.currency ?? 'TWD',
+                $createdAt: r.created_at ?? null,
+                $updatedAt: r.created_at ?? null,
+            };
+        }
+
         async function awGetDbId() {
             if (_awDbId) return _awDbId;
             const data = await awFetch('/databases?limit=25');
@@ -2243,6 +2277,28 @@
          * @param {string|null} cursorBefore - 往上一頁：上一批第一筆的 $id
          */
         async function fetchSubs(cursorAfter = null, cursorBefore = null) {
+            const cfg = getAppwriteConfig();
+            if ((cfg.provider || 'appwrite') === 'supabase') {
+                const qs = new URLSearchParams({
+                    select: 'id,name,site,account,price,nextdate,note,created_at,iscontinue,currency',
+                    limit: String(PAGE_SIZE),
+                    order: cursorBefore ? 'id.desc' : 'id.asc',
+                });
+                if (cursorAfter) qs.set('id', `gt.${cursorAfter}`);
+                if (cursorBefore) qs.set('id', `lt.${cursorBefore}`);
+                const res = await fetch(`${sbBaseEndpoint()}/rest/v1/subscription?${qs.toString()}`, {
+                    headers: sbHeaders({ Prefer: 'count=exact' }),
+                    signal: AbortSignal.timeout(15000),
+                });
+                let rows = [];
+                try { rows = await res.json(); } catch { rows = []; }
+                if (!res.ok) throw new Error((rows && rows.message) || `HTTP ${res.status}`);
+                if (cursorBefore) rows.reverse();
+                const range = res.headers.get('content-range') || '';
+                const total = Number((range.split('/')[1] || '').trim());
+                return { documents: rows.map(mapSbRowToDoc), total: Number.isFinite(total) ? total : rows.length };
+            }
+
             const db = await awGetDbId();
             const col = await awGetSubColId();
             const queries = [
@@ -2257,6 +2313,42 @@
         }
 
         async function saveSub(formData, docId = null) {
+            const cfg = getAppwriteConfig();
+            if ((cfg.provider || 'appwrite') === 'supabase') {
+                const payload = {
+                    name: formData.name ?? '',
+                    site: formData.site ?? null,
+                    account: formData.account ?? null,
+                    price: formData.price ?? 0,
+                    nextdate: formData.nextdate ? String(formData.nextdate).slice(0, 10) : null,
+                    note: formData.note ?? null,
+                    iscontinue: formData.continue !== false,
+                    currency: formData.currency ?? 'TWD',
+                };
+                if (docId) {
+                    const res = await fetch(`${sbBaseEndpoint()}/rest/v1/subscription?id=eq.${encodeURIComponent(docId)}`, {
+                        method: 'PATCH',
+                        headers: sbHeaders({ Prefer: 'return=representation' }),
+                        body: JSON.stringify(payload),
+                        signal: AbortSignal.timeout(15000),
+                    });
+                    let rows = [];
+                    try { rows = await res.json(); } catch { rows = []; }
+                    if (!res.ok) throw new Error((rows && rows.message) || `HTTP ${res.status}`);
+                    return rows[0] ? mapSbRowToDoc(rows[0]) : null;
+                }
+                const res = await fetch(`${sbBaseEndpoint()}/rest/v1/subscription`, {
+                    method: 'POST',
+                    headers: sbHeaders({ Prefer: 'return=representation' }),
+                    body: JSON.stringify(payload),
+                    signal: AbortSignal.timeout(15000),
+                });
+                let rows = [];
+                try { rows = await res.json(); } catch { rows = []; }
+                if (!res.ok) throw new Error((rows && rows.message) || `HTTP ${res.status}`);
+                return rows[0] ? mapSbRowToDoc(rows[0]) : null;
+            }
+
             const db = await awGetDbId();
             const col = await awGetSubColId();
             if (docId) {
@@ -2272,6 +2364,21 @@
         }
 
         async function deleteSub(docId) {
+            const cfg = getAppwriteConfig();
+            if ((cfg.provider || 'appwrite') === 'supabase') {
+                const res = await fetch(`${sbBaseEndpoint()}/rest/v1/subscription?id=eq.${encodeURIComponent(docId)}`, {
+                    method: 'DELETE',
+                    headers: sbHeaders(),
+                    signal: AbortSignal.timeout(15000),
+                });
+                if (!res.ok) {
+                    let json = null;
+                    try { json = await res.json(); } catch { }
+                    throw new Error(json?.message || `HTTP ${res.status}`);
+                }
+                return null;
+            }
+
             const db = await awGetDbId();
             const col = await awGetSubColId();
             return awFetch(`/databases/${db}/collections/${col}/documents/${docId}`, { method: 'DELETE' });
