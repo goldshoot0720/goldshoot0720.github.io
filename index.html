@@ -1526,6 +1526,21 @@
         function getDefaultsByProvider(provider) {
             return provider === 'supabase' ? SUPABASE_DEFAULTS : APPWRITE_DEFAULTS;
         }
+        const CONFIG_KEYS = ['nickname', 'endpoint', 'projectId', 'apiKey', 'bucket'];
+
+        function getProviderConfig(profile, provider) {
+            const p = profile || {};
+            const pid = provider || p.provider || 'appwrite';
+            const nested = (p.providers && p.providers[pid]) || {};
+            const legacy = {};
+            const useLegacyFallback = !p.providers;
+            if (useLegacyFallback && (p.provider || 'appwrite') === pid) {
+                CONFIG_KEYS.forEach(k => {
+                    if (p[k] !== undefined) legacy[k] = p[k];
+                });
+            }
+            return Object.assign({}, getDefaultsByProvider(pid), legacy, nested, { provider: pid });
+        }
 
         function _newId() { return String(Date.now()); }
 
@@ -1539,7 +1554,13 @@
                 const nick = legacy.nickname || 'default';
                 const id = _newId();
                 const defaultName = nick === 'default' ? 'default' : `Appwrite-${nick}`;
-                const migrated = [{ id, name: defaultName, provider: 'appwrite', ...legacy }];
+                const migrated = [{
+                    id,
+                    name: defaultName,
+                    provider: 'appwrite',
+                    providers: { appwrite: Object.assign({}, APPWRITE_DEFAULTS, legacy) },
+                    ...legacy
+                }];
                 localStorage.setItem(PROFILES_KEY, JSON.stringify(migrated));
                 localStorage.setItem(ACTIVE_KEY, id);
                 return migrated;
@@ -1566,7 +1587,7 @@
             const profiles = loadProfiles();
             const activeId = getActiveId();
             const profile = profiles.find(p => p.id === activeId) || profiles[0] || {};
-            return Object.assign({}, getDefaultsByProvider(profile.provider || 'appwrite'), profile);
+            return Object.assign({}, profile, getProviderConfig(profile, profile.provider || 'appwrite'));
         }
 
         /** 儲存欄位到目前活躍設定檔 */
@@ -1574,10 +1595,38 @@
             const profiles = loadProfiles();
             const activeId = getActiveId();
             const idx = profiles.findIndex(p => p.id === activeId);
-            if (idx >= 0) Object.assign(profiles[idx], fields);
+            if (idx >= 0) {
+                const profile = profiles[idx];
+                const previousProvider = profile.provider || 'appwrite';
+                const provider = fields.provider || previousProvider;
+                if (!profile.providers) {
+                    profile.providers = {};
+                    const migrated = {};
+                    CONFIG_KEYS.forEach(k => {
+                        if (profile[k] !== undefined) migrated[k] = profile[k];
+                    });
+                    if (Object.keys(migrated).length) profile.providers[previousProvider] = migrated;
+                }
+                if (fields.provider) profile.provider = fields.provider;
+                const hasConfigFields = CONFIG_KEYS.some(k => Object.prototype.hasOwnProperty.call(fields, k));
+                if (hasConfigFields) {
+                    const curr = profile.providers[provider] || {};
+                    const next = Object.assign({}, curr);
+                    CONFIG_KEYS.forEach(k => {
+                        if (Object.prototype.hasOwnProperty.call(fields, k)) next[k] = fields[k];
+                    });
+                    profile.providers[provider] = next;
+                    Object.assign(profile, next);
+                }
+                Object.keys(fields).forEach(k => {
+                    if (k !== 'provider' && k !== 'providers' && !CONFIG_KEYS.includes(k)) profile[k] = fields[k];
+                });
+            }
             saveProfiles(profiles);
             // keep legacy key in sync for external consumers
-            localStorage.setItem(APPWRITE_KEY, JSON.stringify(profiles[idx] || fields));
+            const active = profiles[idx] || {};
+            const activeProvider = active.provider || 'appwrite';
+            localStorage.setItem(APPWRITE_KEY, JSON.stringify(getProviderConfig(active, activeProvider)));
         }
 
         /* ── Provider definitions ── */
@@ -1861,7 +1910,7 @@
                 // highlight tab
                 profileTabs.querySelectorAll('.profile-tab').forEach(t =>
                     t.classList.toggle('active', t.dataset.profileId === id));
-                fillFields(Object.assign({}, getDefaultsByProvider(prof.provider || 'appwrite'), prof));
+                fillFields(Object.assign({}, prof, getProviderConfig(prof, prof.provider || 'appwrite')));
                 refreshAvatar();
             }
 
@@ -2003,17 +2052,12 @@
                     wipSection.style.display = '';
                     if (wipTitle) wipTitle.textContent = `${info?.name || id} 尚未實作`;
                 }
-                // persist provider + seed missing fields from provider defaults
+                // persist provider only, then load provider-specific config
+                saveAppwriteConfig({ provider: id });
                 const profiles = loadProfiles();
                 const activeId = getActiveId();
                 const prof = profiles.find(p => p.id === activeId) || {};
-                const defaults = getDefaultsByProvider(id);
-                const next = { provider: id };
-                ['nickname', 'endpoint', 'projectId', 'apiKey', 'bucket'].forEach(k => {
-                    if (!(prof[k] || '').trim() && defaults[k] !== undefined) next[k] = defaults[k];
-                });
-                saveAppwriteConfig(next);
-                if (id === 'supabase') fillFields(Object.assign({}, defaults, prof, next));
+                fillFields(Object.assign({}, prof, getProviderConfig(prof, id)));
             }
 
             panel.querySelectorAll('.provider-card').forEach(card => {
