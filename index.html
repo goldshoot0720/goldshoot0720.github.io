@@ -2406,12 +2406,15 @@
 
         /* ── Subscribe Page — Render ── */
         function renderSubscribePage() {
+            const provider = (getAppwriteConfig().provider || 'appwrite');
+            const providerName = provider === 'supabase' ? 'Supabase' : 'Appwrite';
             const wrap = document.createElement('div');
             wrap.className = 'page-panel subscribe-page';
             wrap.innerHTML = `
                 <div class="page-toolbar">
                     <span class="page-toolbar-title">📬 訂閱清單</span>
                     <span class="page-toolbar-count" id="subCount">—</span>
+                    <span class="page-toolbar-count" id="subProviderBadge">資料源: ${providerName}</span>
                     <span style="flex:1"></span>
                     <button class="btn btn-danger" id="subBulkDelBtn" style="display:none">🗑️ 刪除所選</button>
                     <button class="btn btn-ghost" id="subPrevBtn" disabled>◀ 上一頁</button>
