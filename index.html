@@ -1515,6 +1515,17 @@
             projectId: '69836152003d00c0279a',
             apiKey: 'standard_69882a84f42f0170da80c05d2183cac2f71a531ca044b71f093ffbed3978bc73c721b6a15263a32fee437eaa15a81048795876100bd8eb31361592d0b69ec843a5a4e0d327386452b7292c09d99ffd42c899f63f06df86a071b58c738118efbe794a7de788e6e629623d26d510ff07757de942d7852739e0c409d52a19e553a2',
         };
+        const SUPABASE_DEFAULTS = {
+            nickname: '',
+            endpoint: 'https://busgjgbvlrlbyolsubcj.supabase.co',
+            projectId: 'busgjgbvlrlbyolsubcj',
+            apiKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1c2dqZ2J2bHJsYnlvbHN1YmNqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjYyNDMzMTEsImV4cCI6MjA4MTgxOTMxMX0.OsIW2wWqEn6bTo_7oW2RY8gAyIy87dydw1EWFMa9GQc',
+            bucket: '',
+        };
+
+        function getDefaultsByProvider(provider) {
+            return provider === 'supabase' ? SUPABASE_DEFAULTS : APPWRITE_DEFAULTS;
+        }
 
         function _newId() { return String(Date.now()); }
 
@@ -1554,7 +1565,7 @@
             const profiles = loadProfiles();
             const activeId = getActiveId();
             const profile = profiles.find(p => p.id === activeId) || profiles[0] || {};
-            return Object.assign({}, APPWRITE_DEFAULTS, profile);
+            return Object.assign({}, getDefaultsByProvider(profile.provider || 'appwrite'), profile);
         }
 
         /** 儲存欄位到目前活躍設定檔 */
@@ -1795,7 +1806,7 @@
                 // highlight tab
                 profileTabs.querySelectorAll('.profile-tab').forEach(t =>
                     t.classList.toggle('active', t.dataset.profileId === id));
-                fillFields(Object.assign({}, APPWRITE_DEFAULTS, prof));
+                fillFields(Object.assign({}, getDefaultsByProvider(prof.provider || 'appwrite'), prof));
                 refreshAvatar();
             }
 
@@ -1858,7 +1869,7 @@
                         const profiles = loadProfiles();
                         const id = _newId();
                         const name = `新設定檔-${profiles.length + 1}`;
-                        profiles.push({ id, name, provider: 'appwrite', nickname: '', endpoint: '', projectId: '', apiKey: '' });
+                        profiles.push({ id, name, provider: 'appwrite', nickname: '', endpoint: '', projectId: '', apiKey: '', bucket: '' });
                         saveProfiles(profiles);
                         setActiveId(id);
                         renderProfileTabs();
@@ -1935,8 +1946,17 @@
                     wipSection.style.display = '';
                     if (wipTitle) wipTitle.textContent = `${info?.name || id} 尚未實作`;
                 }
-                // persist into active profile immediately
-                saveAppwriteConfig({ provider: id });
+                // persist provider + seed missing fields from provider defaults
+                const profiles = loadProfiles();
+                const activeId = getActiveId();
+                const prof = profiles.find(p => p.id === activeId) || {};
+                const defaults = getDefaultsByProvider(id);
+                const next = { provider: id };
+                ['nickname', 'endpoint', 'projectId', 'apiKey', 'bucket'].forEach(k => {
+                    if (!(prof[k] || '').trim() && defaults[k] !== undefined) next[k] = defaults[k];
+                });
+                saveAppwriteConfig(next);
+                if (id === 'supabase') fillFields(Object.assign({}, defaults, prof, next));
             }
 
             panel.querySelectorAll('.provider-card').forEach(card => {
