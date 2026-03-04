@@ -1638,6 +1638,7 @@
 
             const isConfigProvider = selectedProvider === 'appwrite' || selectedProvider === 'supabase';
             const selectedName = PROVIDERS.flatMap(c => c.items).find(p => p.id === selectedProvider)?.name || selectedProvider;
+            const supabaseEndpointPreview = cfg.projectId ? `https://${cfg.projectId}.supabase.co` : 'https://<project-id>.supabase.co';
 
             /* Build profile tabs HTML */
             const profiles = loadProfiles();
@@ -1694,7 +1695,12 @@
                 value="${cfg.nickname || ''}" />
             </div>
 
-            <div class="settings-field">
+            <div class="settings-field" id="sbEndpointField" style="${selectedProvider === 'supabase' ? '' : 'display:none'}">
+              <label class="settings-label">Endpoint（自動產生）</label>
+              <div class="settings-hint" id="sb_endpoint_preview">${supabaseEndpointPreview}</div>
+            </div>
+
+            <div class="settings-field" id="endpointField" style="${selectedProvider === 'supabase' ? 'display:none' : ''}">
               <label class="settings-label">Endpoint (端點)</label>
               <div class="settings-hint">例如：https://cloud.appwrite.io/v1</div>
               <input id="aw_endpoint" class="settings-input" type="url"
@@ -1748,6 +1754,34 @@
             const wipSection = panel.querySelector('#wipSection');
             const wipTitle = panel.querySelector('#wipTitle');
             const profileTabs = panel.querySelector('#profileTabs');
+            const projectInput = panel.querySelector('#aw_project');
+            const endpointInput = panel.querySelector('#aw_endpoint');
+            const apiKeyInput = panel.querySelector('#aw_apikey');
+            const projectLabel = projectInput?.closest('.settings-field')?.querySelector('.settings-label');
+            const apiKeyLabel = apiKeyInput?.closest('.settings-field')?.querySelector('.settings-label');
+            const endpointField = panel.querySelector('#endpointField');
+            const sbEndpointField = panel.querySelector('#sbEndpointField');
+            const sbEndpointPreview = panel.querySelector('#sb_endpoint_preview');
+            const settingsBody = panel.querySelector('.settings-body');
+            const apiKeyField = apiKeyInput?.closest('.settings-field');
+
+            let bucketInput = panel.querySelector('#aw_bucket');
+            let bucketField = panel.querySelector('#bucketField');
+            if (!bucketField && settingsBody && apiKeyField) {
+                bucketField = document.createElement('div');
+                bucketField.className = 'settings-field';
+                bucketField.id = 'bucketField';
+                bucketField.style.display = 'none';
+                bucketField.innerHTML = `
+                  <label class="settings-label">SUPABASE_BUCKET</label>
+                  <input id="aw_bucket" class="settings-input" type="text" placeholder="bucket-name" />
+                `;
+                settingsBody.insertBefore(bucketField, apiKeyField.nextSibling);
+                bucketInput = bucketField.querySelector('#aw_bucket');
+            }
+            if (bucketInput && !bucketInput.value) {
+                bucketInput.value = getAppwriteConfig().bucket || '';
+            }
 
             /* ── Helpers ── */
             const allProviders = PROVIDERS.flatMap(c => c.items);
@@ -1757,17 +1791,37 @@
                 setTimeout(() => { toast.innerHTML = ''; }, 4000);
             }
 
+            function syncSupabaseEndpoint() {
+                if (currentProvider !== 'supabase') return;
+                const projectId = projectInput?.value.trim() || '';
+                const endpoint = projectId ? `https://${projectId}.supabase.co` : '';
+                if (endpointInput) endpointInput.value = endpoint;
+                if (sbEndpointPreview) sbEndpointPreview.textContent = endpoint || 'https://<project-id>.supabase.co';
+            }
+
+            function updateProviderFields(providerId) {
+                const isSupabase = providerId === 'supabase';
+                if (projectLabel) projectLabel.textContent = 'Project ID';
+                if (apiKeyLabel) apiKeyLabel.textContent = isSupabase ? 'SUPABASE_ANON_KEY' : 'API Key';
+                if (endpointField) endpointField.style.display = isSupabase ? 'none' : '';
+                if (sbEndpointField) sbEndpointField.style.display = isSupabase ? '' : 'none';
+                if (bucketField) bucketField.style.display = isSupabase ? '' : 'none';
+                syncSupabaseEndpoint();
+            }
+
             /* ── Fill form fields from a profile object ── */
             function fillFields(prof) {
                 panel.querySelector('#aw_nickname').value = prof.nickname || '';
                 panel.querySelector('#aw_endpoint').value = prof.endpoint || '';
                 panel.querySelector('#aw_project').value = prof.projectId || '';
                 panel.querySelector('#aw_apikey').value = prof.apiKey || '';
+                if (bucketInput) bucketInput.value = prof.bucket || '';
                 // update provider cards
                 const prov = prof.provider || 'appwrite';
                 panel.querySelectorAll('.provider-card').forEach(c =>
                     c.classList.toggle('active', c.dataset.provider === prov));
                 currentProvider = prov;
+                updateProviderFields(prov);
                 if (prov === 'appwrite' || prov === 'supabase') {
                     awSection.style.display = '';
                     wipSection.style.display = 'none';
@@ -1933,9 +1987,11 @@
 
             /* ── Provider card switches ── */
             let currentProvider = getAppwriteConfig().provider || 'appwrite';
+            updateProviderFields(currentProvider);
 
             function switchProvider(id) {
                 currentProvider = id;
+                updateProviderFields(id);
                 panel.querySelectorAll('.provider-card').forEach(card =>
                     card.classList.toggle('active', card.dataset.provider === id));
                 const info = allProviders.find(p => p.id === id);
@@ -1973,9 +2029,14 @@
 
             const getFields = () => ({
                 nickname: panel.querySelector('#aw_nickname').value.trim(),
-                endpoint: panel.querySelector('#aw_endpoint').value.trim().replace(/\/$/, ''),
                 projectId: panel.querySelector('#aw_project').value.trim(),
                 apiKey: panel.querySelector('#aw_apikey').value.trim(),
+                bucket: bucketInput ? bucketInput.value.trim() : '',
+                endpoint: (() => {
+                    const projectId = panel.querySelector('#aw_project').value.trim();
+                    if (currentProvider === 'supabase') return projectId ? `https://${projectId}.supabase.co` : '';
+                    return panel.querySelector('#aw_endpoint').value.trim().replace(/\/$/, '');
+                })(),
             });
 
             function setBadge(state, text) {
@@ -1989,6 +2050,12 @@
                 inp.type = show ? 'text' : 'password';
                 eyeBtn.textContent = show ? '🙈' : '👁️';
             });
+
+            if (projectInput) {
+                projectInput.addEventListener('input', () => {
+                    syncSupabaseEndpoint();
+                });
+            }
 
             saveBtn.addEventListener('click', () => {
                 const fields = getFields();
@@ -2045,9 +2112,10 @@
 
             clearBtn.addEventListener('click', () => {
                 if (!confirm('確定要清除此設定檔的 Appwrite 設定嗎？')) return;
-                saveAppwriteConfig({ nickname: '', endpoint: '', projectId: '', apiKey: '' });
-                ['#aw_nickname', '#aw_endpoint', '#aw_project', '#aw_apikey'].forEach(s =>
+                saveAppwriteConfig({ nickname: '', endpoint: '', projectId: '', apiKey: '', bucket: '' });
+                ['#aw_nickname', '#aw_endpoint', '#aw_project', '#aw_apikey', '#aw_bucket'].forEach(s =>
                     panel.querySelector(s).value = '');
+                syncSupabaseEndpoint();
                 setBadge('disconnected', '未設定');
                 showToast('success', '🗑️ 設定已清除');
             });
