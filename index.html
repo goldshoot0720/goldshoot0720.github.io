@@ -4488,6 +4488,162 @@
             av.title = name || '使用者';
         };
 
+        refreshAvatar = function () {
+            const cfg = getAppwriteConfig();
+            const av = document.getElementById('topbarAvatar');
+            if (!av) return;
+            const name = (cfg.nickname || cfg.projectId || 'FB').trim();
+            av.textContent = name.charAt(0).toUpperCase() || 'F';
+            av.title = name || '使用者';
+        };
+
+        renderSettings = ((original) => function () {
+            const panel = original();
+            panel.querySelector('.profile-bar-label')?.replaceChildren(document.createTextNode('設定檔'));
+            panel.querySelector('#profileExportBtn')?.replaceChildren(document.createTextNode('匯出'));
+            panel.querySelector('#profileImportBtn')?.replaceChildren(document.createTextNode('匯入'));
+            panel.querySelector('.provider-picker-header')?.replaceChildren(document.createTextNode('資料來源選擇'));
+            panel.querySelector('#providerTitle')?.replaceChildren(document.createTextNode('資料來源設定'));
+            panel.querySelector('#providerSub')?.replaceChildren(document.createTextNode('設定資料庫、驗證與儲存相關連線資訊'));
+            panel.querySelector('#saveBtn')?.replaceChildren(document.createTextNode('儲存設定'));
+            panel.querySelector('#testBtn')?.replaceChildren(document.createTextNode('測試連線'));
+            panel.querySelector('#clearBtn')?.replaceChildren(document.createTextNode('清除設定'));
+            panel.querySelector('#eyeBtn')?.replaceChildren(document.createTextNode('顯示'));
+            panel.querySelector('#aw_nickname')?.setAttribute('placeholder', '例如：工作站、個人帳號、測試環境');
+            panel.querySelector('#aw_endpoint')?.setAttribute('placeholder', 'https://cloud.appwrite.io/v1');
+            panel.querySelector('#aw_project')?.setAttribute('placeholder', '輸入 Project ID');
+            panel.querySelector('#aw_apikey')?.setAttribute('placeholder', '輸入 API Key 或 Anon Key');
+            return panel;
+        })(renderSettings);
+
+        renderSubscribePage = function () {
+            const provider = (getAppwriteConfig().provider || 'appwrite');
+            const providerName = provider === 'supabase' ? 'Supabase' : 'Appwrite';
+            const wrap = document.createElement('div');
+            wrap.className = 'page-panel subscribe-page';
+            wrap.innerHTML = `
+                <div class="page-toolbar">
+                    <span class="page-toolbar-title">訂閱管理</span>
+                    <span class="page-toolbar-count" id="subCount">0</span>
+                    <span class="page-toolbar-count" id="subProviderBadge">資料來源 ${providerName}</span>
+                    <span style="flex:1"></span>
+                    <button class="btn btn-danger" id="subBulkDelBtn" style="display:none">批次刪除</button>
+                    <button class="btn btn-ghost" id="subPrevBtn" disabled>上一頁</button>
+                    <span id="subPageInfo" style="font-size:12px;color:var(--text-muted);padding:0 6px;white-space:nowrap">-</span>
+                    <button class="btn btn-ghost" id="subNextBtn" disabled>下一頁</button>
+                    <button class="btn btn-ghost" id="subExportBtn">匯出 CSV</button>
+                    <button class="btn btn-ghost" id="subImportBtn">匯入 CSV</button>
+                    <input type="file" id="subImportFile" accept=".csv" style="display:none" />
+                    <button class="btn btn-primary" id="subAddBtn">新增訂閱</button>
+                </div>
+                <div style="position:relative;flex:1;min-height:0;display:flex;flex-direction:column">
+                    <div class="page-body" id="subBody">
+                        <div class="spinner-wrap"><div class="spinner"></div><span>載入訂閱資料中...</span></div>
+                    </div>
+                    <div style="position:absolute;bottom:20px;right:20px;display:flex;flex-direction:column;gap:8px;z-index:10">
+                        <button id="subScrollTop" title="回到頂部" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg-panel);color:var(--text-primary);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.14);transition:background .2s">↑</button>
+                        <button id="subScrollBot" title="移到底部" style="width:40px;height:40px;border-radius:50%;border:1px solid var(--border);background:var(--bg-panel);color:var(--text-primary);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.14);transition:background .2s">↓</button>
+                    </div>
+                </div>
+                <div class="modal-overlay" id="subModal" style="display:none">
+                    <div class="modal" style="max-width:560px">
+                        <div class="modal-header">
+                            <span class="modal-title" id="subModalTitle">新增訂閱</span>
+                            <div class="modal-close" id="subModalClose">×</div>
+                        </div>
+                        <div class="modal-body">
+                            <div id="subModalErr" style="display:none" class="settings-toast error"></div>
+                            <div class="form-row">
+                                <div class="form-field full">
+                                    <label class="form-label">名稱 <span class="required">*</span></label>
+                                    <input id="sf_name" class="form-input" type="text" placeholder="例如：Netflix、GitHub、Notion" maxlength="100" />
+                                </div>
+                                <div class="form-field full">
+                                    <label class="form-label">網站</label>
+                                    <input id="sf_site" class="form-input" type="url" placeholder="https://example.com" />
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">價格</label>
+                                    <input id="sf_price" class="form-input" type="number" placeholder="0" min="0" />
+                                </div>
+                                <div class="form-field">
+                                    <label class="form-label">幣別</label>
+                                    <select id="sf_currency" class="form-select">
+                                        <option value="TWD">TWD 新台幣</option>
+                                        <option value="USD">USD 美元</option>
+                                        <option value="JPY">JPY 日圓</option>
+                                        <option value="EUR">EUR 歐元</option>
+                                        <option value="GBP">GBP 英鎊</option>
+                                        <option value="HKD">HKD 港幣</option>
+                                        <option value="CNY">CNY 人民幣</option>
+                                        <option value="SGD">SGD 新幣</option>
+                                    </select>
+                                </div>
+                                <div class="form-field full">
+                                    <label class="form-label">下次續訂日</label>
+                                    <input id="sf_nextdate" class="form-input" type="date" />
+                                </div>
+                                <div class="form-field full">
+                                    <label class="form-label">帳號資訊</label>
+                                    <input id="sf_account" class="form-input" type="text" placeholder="登入帳號、Email 或辨識資訊" maxlength="100" />
+                                </div>
+                                <div class="form-field full">
+                                    <label class="form-label">備註</label>
+                                    <textarea id="sf_note" class="form-input" placeholder="補充方案內容、付款方式或使用情境" maxlength="100" rows="3"></textarea>
+                                </div>
+                                <div class="form-field full">
+                                    <div class="form-checkbox-row">
+                                        <input id="sf_continue" class="form-checkbox" type="checkbox" checked />
+                                        <label class="form-label" for="sf_continue" style="text-transform:none;font-size:13px">持續續訂</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-primary" id="subSaveBtn">儲存</button>
+                            <button class="btn btn-ghost" id="subCancelBtn">取消</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-overlay" id="subBulkModal" style="display:none">
+                    <div class="modal" style="max-width:460px">
+                        <div class="modal-header">
+                            <span class="modal-title" style="color:#a24b33">批次刪除確認</span>
+                            <div class="modal-close" id="subBulkClose">×</div>
+                        </div>
+                        <div class="modal-body">
+                            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">你即將刪除 <strong id="subBulkCount" style="color:#a24b33">0</strong> 筆訂閱資料，這個操作無法復原。</p>
+                            <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">請輸入指定文字以完成確認。</p>
+                            <code style="display:block;padding:8px 12px;background:var(--bg-dark);border-radius:6px;font-size:13px;color:#8a6610;margin-bottom:12px;border:1px solid var(--border)">DELETE subscription</code>
+                            <input id="subBulkInput" class="settings-input" type="text" placeholder="輸入 DELETE subscription" autocomplete="off" />
+                        </div>
+                        <div class="modal-footer">
+                            <button class="btn btn-danger" id="subBulkConfirmBtn" disabled>確認刪除</button>
+                            <button class="btn btn-ghost" id="subBulkCancelBtn">取消</button>
+                        </div>
+                    </div>
+                </div>`;
+            return wrap;
+        };
+
+        buildSubTable = function (docs) {
+            if (!docs.length) {
+                return `<div class="empty-state"><div class="empty-state-icon">◎</div><div>目前還沒有訂閱資料。先新增第一筆服務，就能開始追蹤價格與續訂日。</div></div>`;
+            }
+            const rows = docs.map(d => {
+                const days = daysUntil(d.nextdate);
+                const dayBadge = days == null ? '' :
+                    days < 0 ? `<br><span style="color:#a24b33;font-size:10px">已逾期 ${Math.abs(days)} 天</span>` :
+                        days <= 7 ? `<br><span style="color:#8a6610;font-size:10px">${days} 天內續訂</span>` :
+                            `<br><span style="color:var(--text-muted);font-size:10px">剩餘 ${days} 天</span>`;
+                const nameCell = d.site
+                    ? `<a href="${d.site}" target="_blank" rel="noopener" class="td-link" style="color:var(--text-primary);font-weight:500">${d.name || '未命名'}</a><br><span style="font-size:10px;color:var(--text-muted)">${d.site}</span>`
+                    : `${d.name || '未命名'}`;
+                return `<tr><td style="width:36px;text-align:center"><input type="checkbox" class="sub-chk form-checkbox" data-id="${d.$id}"></td><td class="td-name">${nameCell}</td><td class="td-price">${fmtPrice(d.price, d.currency)}</td><td>${fmtDate(d.nextdate)}${dayBadge}</td><td>${d.account || '未填寫'}</td><td class="td-note">${d.note || '無'}</td><td><span class="status-badge ${d.continue !== false ? 'on' : 'off'}">${d.continue !== false ? '持續續訂' : '已停用'}</span></td><td><div class="td-actions"><div class="icon-btn sub-edit-btn" data-id="${d.$id}" title="編輯">✎</div><div class="icon-btn danger sub-del-btn" data-id="${d.$id}" data-name="${d.name}" title="刪除">×</div></div></td></tr>`;
+            }).join('');
+            return `<div class="data-table-wrap"><table class="data-table"><thead><tr><th style="width:36px"><input type="checkbox" id="subCheckAll" class="form-checkbox" title="全選"></th><th>名稱</th><th>價格</th><th>下次續訂</th><th>帳號資訊</th><th>備註</th><th>狀態</th><th>操作</th></tr></thead><tbody>${rows}</tbody></table></div>`;
+        };
+
         navigate('home');
         refreshAvatar();
     </script>
